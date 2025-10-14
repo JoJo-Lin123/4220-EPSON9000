@@ -132,7 +132,7 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <p class="text-slate-500">正在從資料庫載入耗材清單...</p>
+                    <p class="text-slate-500">正在載入資料...</p>
                 </div>
             </div>
             <!-- 庫存總覽 -->
@@ -253,29 +253,7 @@
     <!-- Toast Notification -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-[100]"></div>
     
-    <!-- Firebase SDK - Compatibility Version -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
     <script>
-        // ===================================================================================
-        // --- 請在這裡填入您自己的 Firebase 設定 ---
-        // 1. 前往 Firebase Console: https://console.firebase.google.com/
-        // 2. 建立新專案，並進入專案設定
-        // 3. 在「您的應用程式」區塊，新增一個「網頁」應用程式
-        // 4. 複製 Firebase 提供的設定物件，並貼到下方取代 'YOUR_API_KEY' 等內容
-        // ===================================================================================
-        const userFirebaseConfig = {
-          apiKey: "YOUR_API_KEY",
-          authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-          projectId: "YOUR_PROJECT_ID",
-          storageBucket: "YOUR_PROJECT_ID.appspot.com",
-          messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-          appId: "YOUR_APP_ID"
-        };
-        // --- END OF USER CONFIGURATION ---
-        
         const appId = 'default-app-id';
         
         // --- CONSTANTS ---
@@ -283,6 +261,7 @@
             MAPPINGS_KEY: `inventory_app_mappings_${appId}`,
             CUSTOM_CATEGORIES_KEY: `inventory_app_custom_categories_${appId}`,
             VIEW_MODE_KEY: `inventory_view_${appId}`,
+            DATA_KEY: `inventory_app_data_${appId}`,
             INK_LOW_STOCK_THRESHOLD: 2,
             OTHER_LOW_STOCK_THRESHOLD: 3,
         };
@@ -321,8 +300,6 @@
         };
 
         // --- State ---
-        let dbInstance;
-        let currentUserId;
         let purchaseNumberMap = {};
         let allSupplies = [];
         let editingKey = null;
@@ -392,56 +369,44 @@
             }, 3000);
         }
 
-        function setupRealtimeListener(db) {
-            if (!currentUserId) return;
-            const suppliesCollection = db.collection(`artifacts/${appId}/users/${currentUserId}/supplies`);
-            const q = suppliesCollection;
-            q.onSnapshot((snapshot) => {
-                DOM.loadingState.style.display = 'none';
-                const suppliesFromDB = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                const suppliesMap = new Map(suppliesFromDB.map(item => [item.purchaseNumber.trim(), item]));
-
-                const comprehensiveList = Object.entries(purchaseNumberMap).map(([purchaseNumber, details]) => {
-                    const trimmedPurchaseNumber = purchaseNumber.trim();
-                    const dbItem = suppliesMap.get(trimmedPurchaseNumber);
-                    if (dbItem) {
-                        suppliesMap.delete(trimmedPurchaseNumber);
-                        return dbItem;
-                    } else {
-                        return {
-                            purchaseNumber: trimmedPurchaseNumber,
-                            name: details.name,
-                            category: details.category,
-                            quantity: 0,
-                            id: null,
-                            lastPurchaseDate: '---',
-                            usageHistory: [],
-                            inboundHistory: []
-                        };
-                    }
-                });
-                
-                const finalList = [...comprehensiveList, ...Array.from(suppliesMap.values())].sort((a, b) => {
-                    const aDate = a.createdAt?.seconds || 0;
-                    const bDate = b.createdAt?.seconds || 0;
-                    return bDate - aDate;
-                });
-                allSupplies = finalList;
-                
-                renderInventory();
-                renderUnsealHistory();
-                
-            }, (error) => {
-                console.error("監聽資料失敗:", error);
-                DOM.loadingState.style.display = 'none';
-                DOM.inventoryContainer.innerHTML = `<p class="text-red-500 text-center col-span-full">讀取資料時發生錯誤。</p>`;
-            });
+        function saveData() {
+            localStorage.setItem(CONSTANTS.DATA_KEY, JSON.stringify(allSupplies));
         }
 
-        function setupFormListener(db) {
+        function loadData() {
+            let data = JSON.parse(localStorage.getItem(CONSTANTS.DATA_KEY));
+            
+            const suppliesMap = new Map(data ? data.map(item => [item.purchaseNumber.trim(), item]) : []);
+
+            const comprehensiveList = Object.entries(purchaseNumberMap).map(([purchaseNumber, details]) => {
+                const trimmedPurchaseNumber = purchaseNumber.trim();
+                const dbItem = suppliesMap.get(trimmedPurchaseNumber);
+                if (dbItem) {
+                    suppliesMap.delete(trimmedPurchaseNumber);
+                    return dbItem;
+                } else {
+                    return {
+                        id: `placeholder-${trimmedPurchaseNumber}`,
+                        purchaseNumber: trimmedPurchaseNumber,
+                        name: details.name,
+                        category: details.category,
+                        quantity: 0,
+                        lastPurchaseDate: '---',
+                        usageHistory: [],
+                        inboundHistory: []
+                    };
+                }
+            });
+
+            allSupplies = [...comprehensiveList, ...Array.from(suppliesMap.values())];
+            DOM.loadingState.style.display = 'none';
+            renderInventory();
+            renderUnsealHistory();
+        }
+
+        function setupFormListener() {
             const form = document.getElementById('add-item-form');
-            form.addEventListener('submit', async (e) => {
+            form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const { value: category } = DOM.categorySelect;
                 const { value: name } = DOM.itemNameInput;
@@ -450,50 +415,43 @@
                 const quantity = parseInt(document.getElementById('item-quantity').value, 10);
                 if (!category || !name || !purchaseNumber || isNaN(quantity)) return;
 
-                const submitButton = form.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-                submitButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>處理中...`;
-                
-                try {
-                    const suppliesCollection = db.collection(`artifacts/${appId}/users/${currentUserId}/supplies`);
-                    const q = suppliesCollection.where("purchaseNumber", "==", purchaseNumber);
-                    const querySnapshot = await q.get();
+                const existingItem = allSupplies.find(item => item.purchaseNumber === purchaseNumber);
 
-                    if (!querySnapshot.empty) {
-                        // Item exists, update it
-                        const existingDoc = querySnapshot.docs[0];
-                        const itemRef = db.doc(`artifacts/${appId}/users/${currentUserId}/supplies/${existingDoc.id}`);
-                        await itemRef.update({
-                            quantity: firebase.firestore.FieldValue.increment(quantity),
-                            lastPurchaseDate: purchaseDate,
-                            inboundHistory: firebase.firestore.FieldValue.arrayUnion({ date: purchaseDate, quantity: quantity, type: 'restock' })
-                        });
-                        showToast('庫存已成功疊加！');
+                if (existingItem) {
+                    existingItem.quantity += quantity;
+                    if (!existingItem.inboundHistory) existingItem.inboundHistory = [];
+                    existingItem.inboundHistory.push({ date: purchaseDate, quantity, type: 'restock' });
+                    existingItem.lastPurchaseDate = purchaseDate;
+                    if(!existingItem.id.startsWith('placeholder-')){
+                        // No need to change ID if it's already a real item
                     } else {
-                        // Item does not exist, create new one
-                        await suppliesCollection.add({ 
-                            category, name, purchaseNumber, quantity, 
-                            lastPurchaseDate: purchaseDate,
-                            usageHistory: [], 
-                            inboundHistory: [{ date: purchaseDate, quantity: quantity, type: 'initial' }],
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp() 
-                        });
-                        showToast('耗材新增成功！');
+                         existingItem.id = `item-${Date.now()}`;
                     }
-                    
-                    form.reset();
-                    DOM.purchaseNumberFeedback.textContent = '';
-                } catch (error) { 
-                    console.error("新增/更新耗材失敗:", error);
-                    showToast('操作失敗，請稍後再試', 'error');
-                } finally {
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = `<i data-lucide="plus" class="w-5 h-5 mr-2"></i> 新增至庫存`;
-                    lucide.createIcons();
+                     showToast('庫存已成功疊加！');
+                } else {
+                    const newItem = {
+                        id: `item-${Date.now()}`,
+                        purchaseNumber,
+                        name,
+                        category,
+                        quantity,
+                        lastPurchaseDate: purchaseDate,
+                        usageHistory: [],
+                        inboundHistory: [{ date: purchaseDate, quantity, type: 'initial' }],
+                        createdAt: new Date().toISOString()
+                    };
+                    allSupplies.push(newItem);
+                    showToast('耗材新增成功！');
                 }
+
+                saveData();
+                renderInventory();
+                renderUnsealHistory();
+                form.reset();
+                DOM.purchaseNumberFeedback.textContent = '';
             });
         }
-
+        
         function renderInventory() {
             DOM.inventoryListSection.style.display = 'block';
             const mainListContainer = DOM.inventoryList;
@@ -568,7 +526,7 @@
 
         function createItemCard(item) {
             const itemCard = document.createElement('div');
-            const isPlaceholder = !item.id;
+            const isPlaceholder = item.id.startsWith('placeholder-');
             
             const isInk = (majorCategoryMap[item.category] || '其他') === '墨水匣';
             const threshold = isInk ? CONSTANTS.INK_LOW_STOCK_THRESHOLD : CONSTANTS.OTHER_LOW_STOCK_THRESHOLD;
@@ -613,7 +571,7 @@
             }
 
 
-            const actionButtonsHtml = item.id ? `
+            const actionButtonsHtml = !isPlaceholder ? `
                 <div class="flex items-center justify-between mt-4 pt-3 border-t">
                     <div class="flex items-center space-x-2">
                         <button data-action="decrease" class="btn-action bg-slate-200 text-slate-700 rounded-full w-8 h-8 flex items-center justify-center hover:bg-slate-300 text-lg font-bold" ${item.quantity <= 0 ? 'disabled' : ''}>-</button>
@@ -636,7 +594,7 @@
             `;
 
             itemCard.className = cardClasses;
-            itemCard.dataset.itemId = item.id || item.purchaseNumber;
+            itemCard.dataset.itemId = item.id;
             itemCard.innerHTML = `
                 <div>
                     ${purchaseAlertHtml}
@@ -656,7 +614,7 @@
         }
 
         function createItemTableRow(item) {
-            const isPlaceholder = !item.id;
+            const isPlaceholder = item.id.startsWith('placeholder-');
             
             const isInk = (majorCategoryMap[item.category] || '其他') === '墨水匣';
             const threshold = isInk ? CONSTANTS.INK_LOW_STOCK_THRESHOLD : CONSTANTS.OTHER_LOW_STOCK_THRESHOLD;
@@ -683,7 +641,7 @@
                  nameCellContent += `<div class="text-xs text-amber-600 font-semibold flex items-center mt-1"><i data-lucide="alert-triangle" class="w-3 h-3 mr-1"></i>請盡快採購 (建議庫存: ${threshold})</div>`;
             }
             
-            const actionButtonsCell = item.id ? `
+            const actionButtonsCell = !isPlaceholder ? `
                 <div class="flex items-center justify-center space-x-1">
                     <button data-action="unseal" class="btn-action bg-blue-100 text-blue-600 rounded-md h-7 px-3 flex items-center justify-center hover:bg-blue-200 text-xs font-semibold" ${item.quantity <= 0 ? 'disabled' : ''}>拆封</button>
                     <button data-action="decrease" class="btn-action bg-slate-100 text-slate-600 rounded-md w-7 h-7 flex items-center justify-center hover:bg-slate-200 text-base font-bold" ${item.quantity <= 0 ? 'disabled' : ''}>-</button>
@@ -696,7 +654,7 @@
             const historyText = `入庫: ${item.inboundHistory?.length || 0}次, 拆封: ${item.usageHistory?.length || 0}次`;
 
             return `
-                <tr class="${rowClasses}" data-item-id="${item.id || item.purchaseNumber}">
+                <tr class="${rowClasses}" data-item-id="${item.id}">
                     <td class="px-4 py-3 font-medium text-slate-900">${nameCellContent}</td>
                     <td class="px-4 py-3">${item.purchaseNumber || 'N/A'}</td>
                     <td class="px-4 py-3">${item.lastPurchaseDate || '---'}</td>
@@ -756,7 +714,7 @@
                 const row = e.target.closest('tr[data-item-id]');
                 if (row) {
                     const itemId = row.dataset.itemId;
-                    const item = allSupplies.find(s => (s.id || s.purchaseNumber) === itemId);
+                    const item = allSupplies.find(s => s.id === itemId);
                     if (item) handleItemAction(e, item);
                 }
             });
@@ -766,28 +724,22 @@
             const button = e.target.closest('button[data-action]');
             if (!button || button.disabled) return;
             const action = button.dataset.action;
-            const uniqueId = item.id || item.purchaseNumber;
-
-            const actionHandler = (updateFunction) => {
-                setItemLoadingState(uniqueId, true);
-                updateFunction();
-            };
 
             switch (action) {
                 case 'increase':
                     openAddStockModal(item);
                     break;
                 case 'decrease':
-                    showConfirmation('確認出庫', `確定要將 "${item.name}" 的庫存減 1 嗎？`, () => actionHandler(() => unsealItem(item.id, item.quantity - 1, 'manual')), 'orange');
+                    showConfirmation('確認出庫', `確定要將 "${item.name}" 的庫存減 1 嗎？`, () => unsealItem(item.id, item.quantity - 1, 'manual'), 'orange');
                     break;
                 case 'delete':
-                    showConfirmation('確認刪除', `您確定要永久刪除 "${item.name}" 這筆紀錄嗎？`, () => actionHandler(() => deleteItem(item.id)), 'red');
+                    showConfirmation('確認刪除', `您確定要永久刪除 "${item.name}" 這筆紀錄嗎？`, () => deleteItem(item.id), 'red');
                     break;
                 case 'edit':
                     openEditModal(item);
                     break;
                 case 'unseal':
-                    showConfirmation('確認拆封', `確定要拆封一個 "${item.name}" 嗎？庫存將會減 1。`, () => actionHandler(() => unsealItem(item.id, item.quantity - 1, 'unseal')), 'blue');
+                    showConfirmation('確認拆封', `確定要拆封一個 "${item.name}" 嗎？庫存將會減 1。`, () => unsealItem(item.id, item.quantity - 1, 'unseal'), 'blue');
                     break;
             }
         }
@@ -978,34 +930,29 @@
 
 
         // --- Update/Delete/Edit Functions ---
-        async function unsealItem(id, newQuantity, type = 'unseal') {
-            if (newQuantity < 0 || !dbInstance) return;
-            const itemRef = dbInstance.doc(`artifacts/${appId}/users/${currentUserId}/supplies/${id}`);
-            try {
-                const today = new Date().toISOString().split('T')[0];
-                const historyEntry = type === 'unseal' ? { unsealedDate: today, type: 'unseal' } : { unsealedDate: today, type: 'manual_decrease' };
+        function unsealItem(id, newQuantity, type = 'unseal') {
+            const item = allSupplies.find(s => s.id === id);
+            if (!item) return;
 
-                await itemRef.update({ 
-                    quantity: newQuantity,
-                    usageHistory: firebase.firestore.FieldValue.arrayUnion(historyEntry)
-                });
-                showToast('庫存已更新');
-            } catch (error) { 
-                console.error("更新失敗:", error);
-                showToast('更新失敗', 'error');
-            }
+            const today = new Date().toISOString().split('T')[0];
+            const historyEntry = type === 'unseal' ? { unsealedDate: today, type: 'unseal' } : { unsealedDate: today, type: 'manual_decrease' };
+
+            item.quantity = newQuantity;
+            if(!item.usageHistory) item.usageHistory = [];
+            item.usageHistory.push(historyEntry);
+
+            saveData();
+            renderInventory();
+            renderUnsealHistory();
+            showToast('庫存已更新');
         }
 
-        async function deleteItem(id) {
-            if (!dbInstance) return;
-            const itemRef = dbInstance.doc(`artifacts/${appId}/users/${currentUserId}/supplies/${id}`);
-            try { 
-                await itemRef.delete();
-                showToast('項目已刪除');
-            } catch(error) { 
-                console.error("刪除項目失敗:", error); 
-                showToast('刪除失敗', 'error');
-            }
+        function deleteItem(id) {
+            allSupplies = allSupplies.filter(item => item.id !== id);
+            saveData();
+            renderInventory();
+            renderUnsealHistory();
+            showToast('項目已刪除');
         }
         
         function openAddStockModal(item) {
@@ -1023,7 +970,7 @@
         }
 
         function setupAddStockFormListener() {
-            DOM.addStockForm.addEventListener('submit', async (e) => {
+            DOM.addStockForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 if (!currentlyEditingItemId) return;
                 
@@ -1035,24 +982,24 @@
                     return;
                 }
 
-                const itemRef = dbInstance.doc(`artifacts/${appId}/users/${currentUserId}/supplies/${currentlyEditingItemId}`);
-                try {
-                    await itemRef.update({
-                        quantity: firebase.firestore.FieldValue.increment(quantity),
-                        lastPurchaseDate: date,
-                        inboundHistory: firebase.firestore.FieldValue.arrayUnion({ date, quantity, type: 'restock' })
-                    });
+                const item = allSupplies.find(s => s.id === currentlyEditingItemId);
+                if (item) {
+                    item.quantity += quantity;
+                    item.lastPurchaseDate = date;
+                    if (!item.inboundHistory) item.inboundHistory = [];
+                    item.inboundHistory.push({ date, quantity, type: 'restock' });
+                    
+                    saveData();
+                    renderInventory();
+                    renderUnsealHistory();
                     closeModal(DOM.addStockModal);
                     showToast('入庫成功');
-                } catch (error) {
-                    console.error("入庫失敗:", error);
-                    showToast('入庫失敗', 'error');
                 }
             });
         }
         
-        async function setupEditFormListener() {
-            DOM.editItemForm.addEventListener('submit', async (e) => {
+        function setupEditFormListener() {
+            DOM.editItemForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 if (!currentlyEditingItemId) return;
                 
@@ -1064,33 +1011,19 @@
                     return;
                 }
 
-                const itemRef = dbInstance.doc(`artifacts/${appId}/users/${currentUserId}/supplies/${currentlyEditingItemId}`);
-                try {
-                    const docSnap = await itemRef.get();
-                    if (docSnap.exists) {
-                        const itemData = docSnap.data();
-                        const inboundHistory = itemData.inboundHistory || [];
-
-                        // If there's history, update the last entry's date.
-                        if (inboundHistory.length > 0) {
-                            inboundHistory[inboundHistory.length - 1].date = newLastPurchaseDate;
-                        }
-
-                        // Prepare the update payload
-                        const updatePayload = {
-                            quantity: newQuantity,
-                            lastPurchaseDate: newLastPurchaseDate,
-                            inboundHistory: inboundHistory // Overwrite the whole array with the corrected one
-                        };
-
-                        await itemRef.update(updatePayload);
+                const item = allSupplies.find(s => s.id === currentlyEditingItemId);
+                if (item) {
+                    item.quantity = newQuantity;
+                    item.lastPurchaseDate = newLastPurchaseDate;
+                    if(item.inboundHistory && item.inboundHistory.length > 0) {
+                         item.inboundHistory[item.inboundHistory.length - 1].date = newLastPurchaseDate;
                     }
                     
+                    saveData();
+                    renderInventory();
+                    renderUnsealHistory();
                     closeModal(DOM.editItemModal);
                     showToast('庫存項目更新成功');
-                } catch (error) {
-                    console.error("更新庫存失敗:", error);
-                    showToast('更新失敗', 'error');
                 }
             });
         }
@@ -1114,23 +1047,11 @@
         }
 
         // --- Main Initialization ---
-        async function main() {
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userFirebaseConfig;
-            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
+        function main() {
             initializeAndLoadMappings();
             setView(currentView);
             lucide.createIcons();
             
-             if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
-                DOM.loadingState.style.display = 'none';
-                DOM.inventoryContainer.innerHTML = `<div class="text-center p-6 bg-red-100 text-red-700 rounded-lg">
-                    <h3 class="font-bold text-lg">設定錯誤</h3>
-                    <p class="mt-2">請在 HTML 程式碼中填入您自己的 Firebase 設定 (userFirebaseConfig)。</p>
-                </div>`;
-                return;
-            }
-
             // --- EVENT LISTENERS ---
             DOM.viewToggle.addEventListener('click', (e) => {
                 const button = e.target.closest('button');
@@ -1263,33 +1184,10 @@
                 }
             });
 
-
-            // --- FIREBASE INIT ---
-            try {
-                firebase.initializeApp(firebaseConfig);
-                const auth = firebase.auth();
-                dbInstance = firebase.firestore();
-
-                auth.onAuthStateChanged(async (user) => {
-                    if (user) {
-                        currentUserId = user.uid;
-                        setupRealtimeListener(dbInstance);
-                        setupFormListener(dbInstance);
-                        setupAddStockFormListener();
-                        setupEditFormListener();
-                    } else {
-                         if (initialAuthToken) {
-                            await auth.signInWithCustomToken(initialAuthToken);
-                        } else {
-                            await auth.signInAnonymously();
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error("應用程式初始化失敗:", error);
-                DOM.loadingState.style.display = 'none';
-                DOM.inventoryContainer.innerHTML = `<p class="text-red-500 text-center col-span-full">應用程式初始化失敗。</p>`;
-            }
+            loadData();
+            setupFormListener();
+            setupAddStockFormListener();
+            setupEditFormListener();
         }
 
         main();
