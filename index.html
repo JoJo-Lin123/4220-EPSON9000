@@ -272,8 +272,6 @@
         // --- END OF USER CONFIGURATION ---
         
         const appId = 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userFirebaseConfig;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
         // --- CONSTANTS ---
         const CONSTANTS = {
@@ -1112,6 +1110,9 @@
 
         // --- Main Initialization ---
         async function main() {
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userFirebaseConfig;
+            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
             initializeAndLoadMappings();
             setView(currentView);
             lucide.createIcons();
