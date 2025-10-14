@@ -422,10 +422,8 @@
                     if (!existingItem.inboundHistory) existingItem.inboundHistory = [];
                     existingItem.inboundHistory.push({ date: purchaseDate, quantity, type: 'restock' });
                     existingItem.lastPurchaseDate = purchaseDate;
-                    if(!existingItem.id.startsWith('placeholder-')){
-                        // No need to change ID if it's already a real item
-                    } else {
-                         existingItem.id = `item-${Date.now()}`;
+                    if(existingItem.id.startsWith('placeholder-')){
+                        existingItem.id = `item-${Date.now()}`;
                     }
                      showToast('庫存已成功疊加！');
                 } else {
