@@ -259,13 +259,18 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
     <script>
+        // ===================================================================================
         // --- 請在這裡填入您自己的 Firebase 設定 ---
-        // 前往 Firebase Console -> Project Settings -> General -> Your apps -> SDK setup and configuration
+        // 1. 前往 Firebase Console: https://console.firebase.google.com/
+        // 2. 建立新專案，並進入專案設定
+        // 3. 在「您的應用程式」區塊，新增一個「網頁」應用程式
+        // 4. 複製 Firebase 提供的設定物件，並貼到下方取代 'YOUR_API_KEY' 等內容
+        // ===================================================================================
         const userFirebaseConfig = {
           apiKey: "YOUR_API_KEY",
-          authDomain: "YOUR_AUTH_DOMAIN",
+          authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
           projectId: "YOUR_PROJECT_ID",
-          storageBucket: "YOUR_STORAGE_BUCKET",
+          storageBucket: "YOUR_PROJECT_ID.appspot.com",
           messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
           appId: "YOUR_APP_ID"
         };
@@ -1291,3 +1296,4 @@
     </script>
 </body>
 </html>
+
