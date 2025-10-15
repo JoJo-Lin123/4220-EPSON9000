@@ -96,7 +96,7 @@
             <form id="add-item-form" class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div class="relative">
                     <label for="item-purchase-number" class="block text-sm font-medium text-slate-600 mb-1">採購編號 (可搜尋關鍵字)</label>
-                    <input type="text" id="item-purchase-number" placeholder="輸入編號或名稱關鍵字" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" autocomplete="off">
+                    <input type="text" id="item-purchase-number" placeholder="輸入編號、名稱或品項關鍵字" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" autocomplete="off">
                     <div id="purchase-number-feedback" class="text-sm text-red-500 mt-1 h-4"></div>
                     <div id="purchase-number-results" class="absolute z-10 w-full bg-white border border-slate-300 rounded-md mt-1 max-h-60 overflow-y-auto hidden shadow-lg custom-scrollbar"></div>
                 </div>
@@ -322,6 +322,7 @@
             '94-620-PIBA11044': { name: '防水INKJET海報紙110磅44”(45米)', category: '110海報紙' },
             '94-618-PIBA17036': { name: '防水噴墨厚卡海報紙170磅30米36”', category: '90專用紙(新材編)' },
             '94-620-S041224': { name: 'EPSON 9000 滾筒紙44”*25M 台製<薄專用紙>', category: '110專用紙' },
+            '94-620-S041225': { name: 'EPSON 9000 銅西紙36”*25M 台製<薄專用紙>', category: '90專用紙'},
             '94-620-PIAA13536': { name: '防水噴墨銅版打樣紙135磅30米36吋', category: '90銅板打樣紙' },
             '94-620-PIAF170T36': { name: '背膠超光亮面相紙170磅18米36吋', category: '90背膠亮面相紙' },
             '94-620-PID200ST36': { name: '防水PVC自黏白霧面200磅30米36吋(貼紙)', category: '90自黏白霧面' },
@@ -1146,7 +1147,9 @@
                 }
 
                 const results = Object.entries(purchaseNumberMap).filter(([key, value]) => {
-                    return key.toLowerCase().includes(searchTerm) || value.name.toLowerCase().includes(searchTerm);
+                    return key.toLowerCase().includes(searchTerm) || 
+                           value.name.toLowerCase().includes(searchTerm) ||
+                           value.category.toLowerCase().includes(searchTerm);
                 });
 
                 if (results.length > 0) {
@@ -1244,3 +1247,4 @@
     </script>
 </body>
 </html>
+
