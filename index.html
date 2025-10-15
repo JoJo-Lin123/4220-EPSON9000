@@ -84,9 +84,14 @@
                 <h2 class="text-xl font-semibold text-slate-700 flex items-center">
                     <i data-lucide="plus-circle" class="mr-2 text-indigo-500"></i>新增耗材
                 </h2>
-                <button id="manage-mappings-btn" class="text-sm bg-slate-100 text-slate-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors flex items-center">
-                    <i data-lucide="settings-2" class="w-4 h-4 mr-2"></i>管理品項
-                </button>
+                <div class="flex items-center space-x-2">
+                    <button id="download-csv-btn" class="text-sm bg-green-100 text-green-700 font-semibold py-2 px-4 rounded-lg hover:bg-green-200 transition-colors flex items-center">
+                        <i data-lucide="download" class="w-4 h-4 mr-2"></i>下載庫存報表
+                    </button>
+                    <button id="manage-mappings-btn" class="text-sm bg-slate-100 text-slate-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors flex items-center">
+                        <i data-lucide="settings-2" class="w-4 h-4 mr-2"></i>管理品項
+                    </button>
+                </div>
             </div>
             <form id="add-item-form" class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div class="relative">
@@ -297,6 +302,7 @@
             confirmationModal: document.getElementById('confirmation-modal'),
             unsealHistorySection: document.getElementById('unseal-history-section'),
             unsealHistoryList: document.getElementById('unseal-history-list'),
+            downloadCsvBtn: document.getElementById('download-csv-btn'),
         };
 
         // --- State ---
@@ -314,7 +320,7 @@
             '94-620-PIFO30044': { name: '藝術 防水霧面油畫布44吋30米(台製)', category: '110厚布' },
             '94-620-PIBA11036': { name: '防水INKJET海報紙110磅36”(45米)', category: '90海報紙' },
             '94-620-PIBA11044': { name: '防水INKJET海報紙110磅44”(45米)', category: '110海報紙' },
-            '94618PIBA17036': { name: '防水噴墨厚卡海報紙170磅30米36”', category: '90專用紙(新材編)' },
+            '94-618-PIBA17036': { name: '防水噴墨厚卡海報紙170磅30米36”', category: '90專用紙(新材編)' },
             '94-620-S041224': { name: 'EPSON 9000 滾筒紙44”*25M 台製<薄專用紙>', category: '110專用紙' },
             '94-620-PIAA13536': { name: '防水噴墨銅版打樣紙135磅30米36吋', category: '90銅板打樣紙' },
             '94-620-PIAF170T36': { name: '背膠超光亮面相紙170磅18米36吋', category: '90背膠亮面相紙' },
@@ -1044,6 +1050,50 @@
             tableBtn.classList.toggle('text-slate-500', view !== 'table');
         }
 
+        function downloadCSV() {
+            const headers = [
+                "採購編號", "耗材名稱", "品項", "庫存量", "最近入庫日期", 
+                "入庫紀錄", "拆封紀錄"
+            ];
+
+            const sanitizeField = (field) => {
+                const str = String(field || '').replace(/"/g, '""');
+                return `"${str}"`;
+            };
+
+            const rows = allSupplies.map(item => {
+                const inboundHistory = (item.inboundHistory || [])
+                    .map(h => `${h.date}: ${h.quantity}件`)
+                    .join('; ');
+                const usageHistory = (item.usageHistory || [])
+                    .map(h => h.unsealedDate)
+                    .join('; ');
+                
+                return [
+                    sanitizeField(item.purchaseNumber),
+                    sanitizeField(item.name),
+                    sanitizeField(item.category),
+                    item.quantity,
+                    sanitizeField(item.lastPurchaseDate),
+                    sanitizeField(inboundHistory),
+                    sanitizeField(usageHistory)
+                ].join(',');
+            });
+
+            const csvContent = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            const today = new Date().toISOString().split('T')[0];
+            link.setAttribute("download", `庫存報表_${today}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('報表已開始下載');
+        }
+
         // --- Main Initialization ---
         function main() {
             initializeAndLoadMappings();
@@ -1079,6 +1129,8 @@
                     showToast(`類別 "${trimmedCategory}" 已新增`);
                 }
             });
+
+            DOM.downloadCsvBtn.addEventListener('click', downloadCSV);
 
             DOM.purchaseNumberInput.addEventListener('input', (e) => {
                 const searchTerm = e.target.value.trim().toLowerCase();
