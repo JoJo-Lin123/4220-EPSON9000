@@ -47,6 +47,14 @@
         }
         .table-striped tbody tr:nth-child(odd) { background-color: #f9fafb; }
         .table-striped tbody tr:hover { background-color: #f1f5f9; }
+        .row-disabled {
+            background-color: #f1f5f9 !important; /* slate-200 */
+            color: #64748b; /* slate-500 */
+        }
+        .row-disabled:hover {
+             background-color: #e2e8f0 !important; /* slate-300 */
+        }
+
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -117,9 +125,13 @@
                     <label for="item-purchase-date" class="block text-sm font-medium text-slate-600 mb-1">進貨日期</label>
                     <input type="date" id="item-purchase-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
                 </div>
-                <div class="md:col-span-2">
+                <div>
                     <label for="item-quantity" class="block text-sm font-medium text-slate-600 mb-1">目前庫存</label>
                     <input type="number" id="item-quantity" value="1" min="0" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+                 <div>
+                    <label for="item-remarks" class="block text-sm font-medium text-slate-600 mb-1">備註</label>
+                    <textarea id="item-remarks" rows="1" placeholder="新增備註..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"></textarea>
                 </div>
                 <div class="md:col-span-2">
                     <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors btn-action flex items-center justify-center">
@@ -135,9 +147,10 @@
                 <div class="flex justify-center items-center space-x-2">
                     <svg class="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8
+ 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <p class="text-slate-500">正在載入資料...</p>
+                    <p class="text-slate-500">正在連接資料庫...</p>
                 </div>
             </div>
             <!-- 庫存總覽 -->
@@ -219,19 +232,29 @@
     </div>
 
     <div id="edit-item-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden opacity-0 z-50">
-         <div class="modal-content bg-white w-full max-w-md p-6 rounded-2xl shadow-lg opacity-0 transform -translate-y-10">
+         <div class="modal-content bg-white w-full max-w-lg p-6 rounded-2xl shadow-lg opacity-0 transform -translate-y-10">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-semibold text-slate-800">編輯庫存項目</h3>
                 <button id="close-edit-modal-btn" class="text-slate-400 hover:text-slate-800"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <form id="edit-item-form" class="space-y-4">
-                <div>
-                    <label for="edit-last-purchase-date" class="block text-sm font-medium text-slate-600 mb-1">最近入庫日期</label>
-                    <input type="date" id="edit-last-purchase-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit-last-purchase-date" class="block text-sm font-medium text-slate-600 mb-1">最近入庫日期</label>
+                        <input type="date" id="edit-last-purchase-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
+                    </div>
+                    <div>
+                        <label for="edit-quantity" class="block text-sm font-medium text-slate-600 mb-1">總庫存</label>
+                        <input type="number" id="edit-quantity" min="0" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
+                    </div>
+                     <div>
+                        <label for="edit-purchase-status" class="block text-sm font-medium text-slate-600 mb-1">財編狀態</label>
+                        <input type="text" id="edit-purchase-status" placeholder="例如: P2025-001" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
+                    </div>
                 </div>
-                <div>
-                    <label for="edit-quantity" class="block text-sm font-medium text-slate-600 mb-1">總庫存</label>
-                    <input type="number" id="edit-quantity" min="0" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
+                <div class="sm:col-span-2">
+                    <label for="edit-remarks" class="block text-sm font-medium text-slate-600 mb-1">備註</label>
+                    <textarea id="edit-remarks" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition"></textarea>
                 </div>
                 <div class="!mt-6">
                     <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2.5 px-4 rounded-lg hover:bg-green-700 transition-colors btn-action">更新庫存</button>
@@ -258,19 +281,72 @@
     <!-- Toast Notification -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-[100]"></div>
     
-    <script>
-        const appId = 'default-app-id';
-        
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { 
+            getFirestore, collection, onSnapshot, doc, getDocs,
+            setDoc, updateDoc, deleteDoc, writeBatch, query, limit 
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        /* --- 請在此處貼上您的 Firebase 設定碼 --- */
+        /* 1. 依照 "Firebase 設定指南.md" 的說明，取得您的 firebaseConfig 物件。 */
+        /* 2. 將您複製的內容，完整取代掉下面這幾行。 */
+        const firebaseConfig = {
+            apiKey: "AIzaSyD1Mo73znKs93FiyaXVCnKERAaWzSk_WFY",
+            authDomain: "epson9000-9bcf2.firebaseapp.com",
+            projectId: "epson9000-9bcf2",
+            storageBucket: "epson9000-9bcf2.firebasestorage.app",
+            messagingSenderId: "681687390935",
+            appId: "1:681687390935:web:563c063abd00054fc06e92"
+        };
+        /* ------------------------------------ */
+
         // --- CONSTANTS ---
         const CONSTANTS = {
-            MAPPINGS_KEY: `inventory_app_mappings_${appId}`,
-            CUSTOM_CATEGORIES_KEY: `inventory_app_custom_categories_${appId}`,
-            VIEW_MODE_KEY: `inventory_view_${appId}`,
-            DATA_KEY: `inventory_app_data_${appId}`,
+            MAPPINGS_COLLECTION: `mappings`,
+            CUSTOM_CATEGORIES_COLLECTION: `custom_categories`,
+            SUPPLIES_COLLECTION: `supplies`,
+            VIEW_MODE_KEY: `inventory_view_${getAppId()}`,
             INK_LOW_STOCK_THRESHOLD: 2,
             OTHER_LOW_STOCK_THRESHOLD: 3,
         };
         
+        // Corrected and embedded CSV data
+        const csvData = `品項,採購編號,耗材名稱,財編狀態,備註
+90薄布,94-618-PIFB2006050,"防水絹布(薄油畫布)60"" (切工36""+24"",50米)",,"2023/10/12廠商說防水絹布(薄油畫布)60"" 50m為期貨商品,之後改訂36"",廠商報價36“單價較44”便宜,所以44”的價錢會有問題(單價*吋數),之後若有叫修60""商品再詢問廠商(2024/02/26廠商說已無販售)"
+110薄布,94-618-PIFB2006050,"防水絹布(薄油畫布)60"" (切工44""+16"",50米)",,
+60薄布(停用),94-620-PIFB20024,"防水絹布(薄油畫布)24""(30米)",停用編號,
+90薄布(停用),94-620-PIFB20036,"防水絹布(薄油畫布)36""(30米)",停用編號,
+110薄布(停用),94-620-PIFB20044,"防水絹布(薄油畫布)44""(30米)",停用編號,
+90厚布,94-620-PIFO30036,藝術 防水霧面油畫布36吋 30米(台製),,
+110厚布,94-620-PIFO30044,藝術 防水霧面油畫布44吋 30米(台製),,
+60厚布(停用),,藝術 防水霧面油畫布24吋 30米(台製),停用編號,
+90海報紙(停用),94-620-PIBA11036,"防水INKJET海報紙110磅36""(45米)",停用編號,"2024/02/26廠商說海報紙110磅之後沒有36""(45米)的,都改為30米"
+110海報紙(停用),94-620-PIBA11044,"防水INKJET海報紙110磅44""(45米)",停用編號,"2024/02/26廠商說海報紙110磅之後沒有44""(45米)的,都改為30米,下次進貨規格更改為110磅42""(45米)廠商說單價一樣"
+90專用紙,94-620-S041225,"EPSON 9000 銅西紙36""*25M 台製<薄專用紙>",財產編號,(停用)銅西紙135磅36吋*30M(台製),銅西紙150P,2025/2/27起不會再進貨銅西紙
+90專用紙(新材編),94618PIBA17036,"防水噴墨厚卡海報紙170磅30米36""<台製170磅>",,"2025/5/2防水噴墨厚卡海報紙170磅30米36""舊料號94-618-PIBA17036,有料號94-620-PIBA170T36 36""X30m,防水噴墨厚卡海報紙170磅30米36"""
+110專用紙,94-620-S041224,"EPSON 9000 滾筒紙44""*25M 台製<薄專用紙>",,
+90銅板打樣紙,94-620-PIAA13536,防水噴墨銅版打樣紙135磅30米36吋,,
+90背膠亮面相紙,94-620-PIAF170T36,背膠超光亮面相紙170磅18米36吋,,
+90自黏白霧面,94-620-PID200ST36,防水PVC自黏白霧面200磅30米36吋(貼紙),,
+90原廠相紙,94-618-S041391,"EPSON 頂級光面相紙36""*30.5m S041391<原廠170磅>",,
+110原廠相紙,94-618-S041640,"EPSON 頂級光面相紙44""*30.5m S041640<原廠250磅>",,
+T8041亮光黑/PK,94-618-T804100,EPSON SCP9000亮光黑色墨水匣PK/700ML,,
+T8042藍色/C,94-618-T804200,EPSON SCP9000藍色墨水匣C/700ML,,
+T8043靚紅色/VM,94-618-T804300,EPSON SCP9000靚紅色墨水匣VM/700ML,,
+T8044黃色/Y,94-618-T804400,EPSON SCP9000黃色墨水匣Y/700ML,,
+T8045淡藍色/LC,94-618-T804500,EPSON SCP9000淡藍色墨水匣LC/700ML,,
+T8046淡靚紅色/VLM,94-618-T804600,EPSON SCP9000淡靚紅色墨水匣VLM/700ML,,
+T8047淡黑色/LK,94-618-T804700,EPSON SCP9000淡黑色墨水匣LK/700ML,,
+T8048消光黑/MK,94-618-T804800,EPSON SCP9000消光黑色墨水匣MK/700ML,,
+T8049超淡黑/LLK,94-618-T804900,EPSON SCP9000超淡黑色墨水匣LLK/700ML,,
+T804A橘色/OR,94-618-T804A00,EPSON SCP9000橘色墨水匣OR/700ML,,
+T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
+捲筒配接器,94-620-C811241,EPSON SCP9000捲筒配接器,,
+墨水收集槽,94-618-T699700,EPSON SCP9000廢墨盒,,`;
+
         // --- DOM Elements ---
         const DOM = {
             inventoryContainer: document.getElementById('inventory-container'),
@@ -306,55 +382,28 @@
         };
 
         // --- State ---
-        let purchaseNumberMap = {};
+        let db;
+        let auth;
+        let userId;
         let allSupplies = [];
+        let purchaseNumberMap = {};
         let editingKey = null;
         let currentView = localStorage.getItem(CONSTANTS.VIEW_MODE_KEY) || 'card';
         let currentlyEditingItemId = null;
-
-        // --- Initial Data ---
-        const initialPurchaseNumberMap = {
-            '94-618-PIFB2006050-36': { name: '防水絹布(薄油畫布)60” (切工36”+24”,50米)', category: '90薄布' },
-            '94-618-PIFB2006050-44': { name: '防水絹布(薄油畫布)60” (切工44”+16”,50米)', category: '110薄布' },
-            '94-620-PIFO30036': { name: '藝術 防水霧面油畫布36吋30米(台製)', category: '90厚布' },
-            '94-620-PIFO30044': { name: '藝術 防水霧面油畫布44吋30米(台製)', category: '110厚布' },
-            '94-620-PIBA11036': { name: '防水INKJET海報紙110磅36”(45米)', category: '90海報紙' },
-            '94-620-PIBA11044': { name: '防水INKJET海報紙110磅44”(45米)', category: '110海報紙' },
-            '94-618-PIBA17036': { name: '防水噴墨厚卡海報紙170磅30米36”', category: '90專用紙(新材編)' },
-            '94-620-S041224': { name: 'EPSON 9000 滾筒紙44”*25M 台製<薄專用紙>', category: '110專用紙' },
-            '94-620-S041225': { name: 'EPSON 9000 銅西紙36”*25M 台製<薄專用紙>', category: '90專用紙'},
-            '94-620-PIAA13536': { name: '防水噴墨銅版打樣紙135磅30米36吋', category: '90銅板打樣紙' },
-            '94-620-PIAF170T36': { name: '背膠超光亮面相紙170磅18米36吋', category: '90背膠亮面相紙' },
-            '94-620-PID200ST36': { name: '防水PVC自黏白霧面200磅30米36吋(貼紙)', category: '90自黏白霧面' },
-            '94-618-S041391': { name: 'EPSON 頂級光面相紙36”*30.5m S041391<原廠170磅>', category: '90原廠相紙' },
-            '94-618-S041640': { name: 'EPSON 頂級光面相紙44”*30.5m S041640<原廠250磅>', category: '110原廠相紙' },
-            '94-618-T804100': { name: 'EPSON SCP9000亮光黑色墨水匣PK/700ML', category: 'T8041亮光黑/PK' },
-            '94-618-T804200': { name: 'EPSON SCP9000藍色墨水匣C/700ML', category: 'T8042藍色/C' },
-            '94-618-T804300': { name: 'EPSON SCP9000靚紅色墨水匣VM/700ML', category: 'T55K3靚紅色/VM' },
-            '94-618-T804400': { name: 'EPSON SCP9000黃色墨水匣Y/700ML', category: 'T8044黃色/Y' },
-            '94-618-T804500': { name: 'EPSON SCP9000淡藍色墨水匣LC/700ML', category: 'T55K5淡藍色/LC' },
-            '94-618-T804600': { name: 'EPSON SCP9000淡靚紅色墨水匣VLM/700ML', category: 'T55K6淡靚紅色/VLM' },
-            '94-618-T804700': { name: 'EPSON SCP9000淡黑色墨水匣LK/700ML', category: 'T55K7淡黑色/LK' },
-            '94-618-T804800': { name: 'EPSON SCP9000消光黑色墨水匣MK/700ML', category: 'T8048消光黑MK' },
-            '94-618-T804900': { name: 'EPSON SCP9000超淡黑色墨水匣LLK/700ML', category: 'T55K9超淡黑/LLK' },
-            '94-618-T804A00': { name: 'EPSON SCP9000橘色墨水匣OR/700ML', category: 'T804A橘色/OR' },
-            '94-618-T804B00': { name: 'EPSON SCP9000綠色墨水匣GR/700ML', category: 'T804B綠色/GR' },
-            '94-620-C811241': { name: 'EPSON SCP9000捲筒配接器', category: '捲筒配接器' },
-            '94-618-T699700': { name: 'EPSON SCP9000廢墨盒', category: '墨水收集槽' },
-        };
-
+        
         const majorCategoryMap = {
-            '90薄布': '滾筒布', '110薄布': '滾筒布', '90厚布': '滾筒布', '110厚布': '滾筒布',
-            '90海報紙': '滾筒紙', '110海報紙': '滾筒紙', '90專用紙': '滾筒紙', '90專用紙(新材編)': '滾筒紙', '110專用紙': '滾筒紙', '90銅板打樣紙': '滾筒紙', '90背膠亮面相紙': '滾筒紙', '90自黏白霧面': '滾筒紙', '90原廠相紙': '滾筒紙', '110原廠相紙': '滾筒紙',
-            'T8041亮光黑/PK': '墨水匣', 'T8042藍色/C': '墨水匣', 'T55K3靚紅色/VM': '墨水匣', 'T8044黃色/Y': '墨水匣', 'T55K5淡藍色/LC': '墨水匣', 'T55K6淡靚紅色/VLM': '墨水匣', 'T55K7淡黑色/LK': '墨水匣', 'T8048消光黑MK': '墨水匣', 'T55K9超淡黑/LLK': '墨水匣', 'T804A橘色/OR': '墨水匣', 'T804B綠色/GR': '墨水匣',
+             '90薄布': '滾筒布', '110薄布': '滾筒布', '60薄布(停用)': '滾筒布', '90薄布(停用)': '滾筒布', '110薄布(停用)': '滾筒布', '90厚布': '滾筒布', '110厚布': '滾筒布', '60厚布(停用)': '滾筒布',
+            '90海報紙': '滾筒紙', '110海報紙': '滾筒紙', '90專用紙': '滾筒紙', '90專用紙(新材編)': '滾筒紙', '110專用紙': '滾筒紙', '90銅板打樣紙': '滾筒紙', '90背膠亮面相紙': '滾筒紙', '90自黏白霧面': '滾筒紙', '90原廠相紙': '滾筒紙', '110原廠相紙': '滾筒紙', '90海報紙(停用)': '滾筒紙', '110海報紙(停用)': '滾筒紙',
+            'T8041亮光黑/PK': '墨水匣', 'T8042藍色/C': '墨水匣', 'T8043靚紅色/VM': '墨水匣', 'T8044黃色/Y': '墨水匣', 'T8045淡藍色/LC': '墨水匣', 'T8046淡靚紅色/VLM': '墨水匣', 'T8047淡黑色/LK': '墨水匣', 'T8048消光黑/MK': '墨水匣', 'T8049超淡黑/LLK': '墨水匣', 'T804A橘色/OR': '墨水匣', 'T804B綠色/GR': '墨水匣',
             '捲筒配接器': '其他', '墨水收集槽': '其他'
         };
 
-        /**
-         * 顯示 Toast 通知
-         * @param {string} message - 要顯示的訊息
-         * @param {'success'|'error'} type - 通知類型
-         */
+        // --- Helper Functions ---
+        function getAppId() {
+            // In a real shared environment, this would be a fixed ID for your app.
+            return 'shared-inventory-app';
+        }
+
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -375,96 +424,70 @@
                 toast.addEventListener('animationend', () => toast.remove());
             }, 3000);
         }
-
-        function saveData() {
-            localStorage.setItem(CONSTANTS.DATA_KEY, JSON.stringify(allSupplies));
-        }
-
-        function loadData() {
-            let data = JSON.parse(localStorage.getItem(CONSTANTS.DATA_KEY));
-            
-            const suppliesMap = new Map(data ? data.map(item => [item.purchaseNumber.trim(), item]) : []);
-
-            const comprehensiveList = Object.entries(purchaseNumberMap).map(([purchaseNumber, details]) => {
-                const trimmedPurchaseNumber = purchaseNumber.trim();
-                const dbItem = suppliesMap.get(trimmedPurchaseNumber);
-                if (dbItem) {
-                    suppliesMap.delete(trimmedPurchaseNumber);
-                    return dbItem;
-                } else {
-                    return {
-                        id: `placeholder-${trimmedPurchaseNumber}`,
-                        purchaseNumber: trimmedPurchaseNumber,
-                        name: details.name,
-                        category: details.category,
-                        quantity: 0,
-                        lastPurchaseDate: '---',
-                        usageHistory: [],
-                        inboundHistory: []
-                    };
-                }
-            });
-
-            allSupplies = [...comprehensiveList, ...Array.from(suppliesMap.values())];
-            DOM.loadingState.style.display = 'none';
-            renderInventory();
-            renderUnsealHistory();
-        }
-
-        function setupFormListener() {
-            const form = document.getElementById('add-item-form');
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const { value: category } = DOM.categorySelect;
-                const { value: name } = DOM.itemNameInput;
-                const purchaseNumber = DOM.purchaseNumberInput.value.trim();
-                const purchaseDate = DOM.itemPurchaseDate.value || new Date().toISOString().split('T')[0];
-                const quantity = parseInt(document.getElementById('item-quantity').value, 10);
-                if (!category || !name || !purchaseNumber || isNaN(quantity)) return;
-
-                const existingItem = allSupplies.find(item => item.purchaseNumber === purchaseNumber);
-
-                if (existingItem) {
-                    existingItem.quantity += quantity;
-                    if (!existingItem.inboundHistory) existingItem.inboundHistory = [];
-                    existingItem.inboundHistory.push({ date: purchaseDate, quantity, type: 'restock' });
-                    existingItem.lastPurchaseDate = purchaseDate;
-                    if(existingItem.id.startsWith('placeholder-')){
-                        existingItem.id = `item-${Date.now()}`;
-                    }
-                     showToast('庫存已成功疊加！');
-                } else {
-                    const newItem = {
-                        id: `item-${Date.now()}`,
-                        purchaseNumber,
-                        name,
-                        category,
-                        quantity,
-                        lastPurchaseDate: purchaseDate,
-                        usageHistory: [],
-                        inboundHistory: [{ date: purchaseDate, quantity, type: 'initial' }],
-                        createdAt: new Date().toISOString()
-                    };
-                    allSupplies.push(newItem);
-                    showToast('耗材新增成功！');
-                }
-
-                saveData();
-                renderInventory();
-                renderUnsealHistory();
-                form.reset();
-                DOM.purchaseNumberFeedback.textContent = '';
-            });
-        }
         
+        // --- DATA LOADING AND PROCESSING ---
+        function parseCsvLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+
+        function getInitialDataFromCSV() {
+            const lines = csvData.trim().split('\n').slice(1); // Skip header
+            const suppliesFromCsv = lines.map(line => {
+                if (!line.trim()) return null;
+                const [category, purchaseNumber, name, purchaseStatus, remarks] = parseCsvLine(line.trim());
+                
+                const cleanedPurchaseNumber = purchaseNumber.replace(/"/g, '').trim();
+                const cleanedName = name.replace(/"/g, '').trim();
+
+                if (!cleanedPurchaseNumber && !cleanedName) return null;
+
+                const finalPurchaseNumber = cleanedPurchaseNumber || `manual-${cleanedName}`;
+
+                return {
+                    id: finalPurchaseNumber, // Use purchase number as document ID
+                    purchaseNumber: finalPurchaseNumber,
+                    name: cleanedName,
+                    category: category.replace(/"/g, '').trim(),
+                    purchaseStatus: purchaseStatus.replace(/"/g, '').trim(),
+                    remarks: remarks.replace(/"/g, '').trim(),
+                    quantity: 0,
+                    lastPurchaseDate: '',
+                    usageHistory: [],
+                    inboundHistory: [],
+                };
+            }).filter(Boolean);
+            return suppliesFromCsv;
+        }
+
+        // --- UI Rendering ---
         function renderInventory() {
             DOM.inventoryListSection.style.display = 'block';
+            DOM.loadingState.style.display = 'none';
             const mainListContainer = DOM.inventoryList;
 
             mainListContainer.innerHTML = '';
             mainListContainer.className = 'space-y-8';
+            
+            const activeItems = allSupplies.filter(item => !item.name.includes('(停用)') && !(item.purchaseStatus && item.purchaseStatus.includes('停用')));
+            const discontinuedItems = allSupplies.filter(item => item.name.includes('(停用)') || (item.purchaseStatus && item.purchaseStatus.includes('停用')));
 
-            const groupedAllItems = allSupplies.reduce((acc, item) => {
+             const groupedActiveItems = activeItems.reduce((acc, item) => {
                 const majorCat = majorCategoryMap[item.category] || '其他';
                 if (!acc[majorCat]) acc[majorCat] = [];
                 acc[majorCat].push(item);
@@ -474,24 +497,40 @@
             const categoryOrder = ['滾筒布', '滾筒紙', '墨水匣', '其他'];
             const categoryIcons = { '滾筒布': 'layers', '滾筒紙': 'file-stack', '墨水匣': 'droplets', '其他': 'package' };
 
-            if (allSupplies.length > 0) {
+            if (activeItems.length > 0) {
                 categoryOrder.forEach(majorCat => {
-                    if (groupedAllItems[majorCat] && groupedAllItems[majorCat].length > 0) {
+                    const itemsInCategory = groupedActiveItems[majorCat];
+                    if (itemsInCategory && itemsInCategory.length > 0) {
                         const groupContainer = document.createElement('div');
                         groupContainer.innerHTML = `
                             <h3 class="text-lg font-semibold text-slate-700 mb-3 border-b pb-2 flex items-center">
-                                <i data-lucide="${categoryIcons[majorCat]}" class="w-5 h-5 mr-2 text-slate-500"></i>
+                                <i data-lucide="${categoryIcons[majorCat] || 'package'}" class="w-5 h-5 mr-2 text-slate-500"></i>
                                 ${majorCat}
                             </h3>`;
                         
                         const subListContainer = document.createElement('div');
-                        renderGroup(subListContainer, groupedAllItems[majorCat]);
+                        renderGroup(subListContainer, itemsInCategory);
                         groupContainer.appendChild(subListContainer);
                         mainListContainer.appendChild(groupContainer);
                     }
                 });
             } else {
                  mainListContainer.innerHTML = `<div class="text-center py-10 bg-slate-50 rounded-lg"><i data-lucide="inbox" class="mx-auto h-12 w-12 text-slate-400"></i><h3 class="mt-2 text-sm font-medium text-slate-900">沒有任何項目</h3><p class="mt-1 text-sm text-slate-500">請先新增耗材或管理品項。</p></div>`;
+            }
+
+            if (discontinuedItems.length > 0) {
+                const discontinuedSection = document.createElement('div');
+                discontinuedSection.className = 'mt-12';
+                discontinuedSection.innerHTML = `
+                    <h2 class="text-2xl font-bold text-slate-500 mb-4 border-b pb-2 flex items-center">
+                        <i data-lucide="archive" class="w-6 h-6 mr-3 text-slate-400"></i>
+                        停用項目
+                    </h2>
+                `;
+                const discontinuedContainer = document.createElement('div');
+                renderGroup(discontinuedContainer, discontinuedItems);
+                discontinuedSection.appendChild(discontinuedContainer);
+                mainListContainer.appendChild(discontinuedSection);
             }
 
             lucide.createIcons();
@@ -514,8 +553,7 @@
                             <tr>
                                 <th scope="col" class="px-4 py-3">耗材名稱</th>
                                 <th scope="col" class="px-4 py-3">採購編號</th>
-                                <th scope="col" class="px-4 py-3">最近入庫</th>
-                                <th scope="col" class="px-4 py-3">紀錄</th>
+                                <th scope="col" class="px-4 py-3">財編狀態</th>
                                 <th scope="col" class="px-4 py-3 text-center">庫存</th>
                                 <th scope="col" class="px-4 py-3 text-center">操作</th>
                             </tr>
@@ -531,52 +569,37 @@
 
         function createItemCard(item) {
             const itemCard = document.createElement('div');
-            const isPlaceholder = item.id.startsWith('placeholder-');
             
             const isInk = (majorCategoryMap[item.category] || '其他') === '墨水匣';
             const threshold = isInk ? CONSTANTS.INK_LOW_STOCK_THRESHOLD : CONSTANTS.OTHER_LOW_STOCK_THRESHOLD;
             const isLowStock = item.quantity < threshold && item.quantity > 0;
             const isZero = item.quantity === 0;
+            const isDiscontinued = item.name.includes('(停用)') || (item.purchaseStatus && item.purchaseStatus.includes('停用'));
 
             let cardClasses = 'bg-white rounded-lg shadow p-4 flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 relative overflow-hidden';
-            if (isPlaceholder) {
-                cardClasses += ' bg-slate-50';
+            if (isDiscontinued) {
+                 cardClasses += ' opacity-60 bg-slate-100';
             }
-            if (isZero) {
+            if (isZero && !isDiscontinued) {
                  cardClasses += ' border-2 border-red-400 ring-4 ring-red-100/50';
-            } else if (isLowStock) {
+            } else if (isLowStock && !isDiscontinued) {
                 cardClasses += ' border-2 border-amber-400 ring-4 ring-amber-100/50';
             }
             
-            const historyHtml = `
-                <div class="mt-2 pt-2 border-t border-slate-200 space-y-2">
-                    ${(item.inboundHistory && item.inboundHistory.length > 0) ? `
-                    <div>
-                        <p class="text-xs font-medium text-slate-600 flex items-center"><i data-lucide="log-in" class="w-3 h-3 mr-1.5"></i>入庫紀錄:</p>
-                        <ul class="text-xs text-slate-500 mt-1 pl-5 list-disc">${item.inboundHistory.slice(-3).map(h => `<li>${h.date}: ${h.quantity}件</li>`).join('')}</ul>
-                    </div>` : ''}
-                    ${(item.usageHistory && item.usageHistory.length > 0) ? `
-                    <div>
-                        <p class="text-xs font-medium text-slate-600 flex items-center"><i data-lucide="log-out" class="w-3 h-3 mr-1.5"></i>拆封紀錄:</p>
-                        <ul class="text-xs text-slate-500 mt-1 pl-5 list-disc">${item.usageHistory.slice(-3).map(h => `<li>${h.unsealedDate}</li>`).join('')}</ul>
-                    </div>` : ''}
-                </div>`;
-            
             let purchaseAlertHtml = '';
-            if (isZero) {
+            if (isZero && !isDiscontinued) {
                 purchaseAlertHtml = `<div class="mb-3 flex items-center p-2 rounded-md bg-red-100 text-red-800 text-sm font-bold">
-                     <i data-lucide="shopping-cart" class="w-5 h-5 mr-2"></i>
-                     <span>庫存已歸零 (建議庫存: ${threshold})</span>
-                   </div>`;
-            } else if (isLowStock) {
+                        <i data-lucide="shopping-cart" class="w-5 h-5 mr-2"></i>
+                        <span>庫存已歸零 (建議庫存: ${threshold})</span>
+                    </div>`;
+            } else if (isLowStock && !isDiscontinued) {
                  purchaseAlertHtml = `<div class="mb-3 flex items-center p-2 rounded-md bg-amber-100 text-amber-800 text-sm font-bold">
-                     <i data-lucide="alert-circle" class="w-5 h-5 mr-2"></i>
-                     <span>請盡快採購 (建議庫存: ${threshold})</span>
-                   </div>`;
+                        <i data-lucide="alert-circle" class="w-5 h-5 mr-2"></i>
+                        <span>請盡快採購 (建議庫存: ${threshold})</span>
+                    </div>`;
             }
 
-
-            const actionButtonsHtml = !isPlaceholder ? `
+            const actionButtonsHtml = `
                 <div class="flex items-center justify-between mt-4 pt-3 border-t">
                     <div class="flex items-center space-x-2">
                         <button data-action="decrease" class="btn-action bg-slate-200 text-slate-700 rounded-full w-8 h-8 flex items-center justify-center hover:bg-slate-300 text-lg font-bold" ${item.quantity <= 0 ? 'disabled' : ''}>-</button>
@@ -587,13 +610,6 @@
                         <button data-action="unseal" class="btn-action bg-blue-100 text-blue-600 rounded-md h-8 px-3 flex items-center justify-center hover:bg-blue-200 text-xs font-semibold" ${item.quantity <= 0 ? 'disabled' : ''}>拆封</button>
                         <button data-action="edit" class="btn-action text-slate-500 rounded-full w-8 h-8 flex items-center justify-center hover:bg-slate-200 hover:text-indigo-600"><i data-lucide="pencil" class="w-4 h-4"></i></button>
                         <button data-action="delete" class="btn-action text-slate-500 rounded-full w-8 h-8 flex items-center justify-center hover:bg-slate-200 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                    </div>
-                </div>
-            ` : `
-                <div class="flex items-center justify-end mt-4 pt-3 border-t">
-                    <div class="text-right">
-                        <p class="text-xs text-slate-500">現有庫存</p>
-                        <span data-role="quantity-display" class="font-bold text-xl text-slate-800">${item.quantity}</span>
                     </div>
                 </div>
             `;
@@ -607,9 +623,12 @@
                         <h3 class="text-base font-bold text-slate-800 flex-1 pr-2">${item.name}</h3>
                         <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-100 flex-shrink-0">${item.category || '未分類'}</span>
                     </div>
-                    <p class="text-xs text-slate-500">採購編號: <span class="font-medium text-slate-600">${item.purchaseNumber || 'N/A'}</span></p>
-                    <p class="text-xs text-slate-500">最近入庫: <span class="font-medium text-slate-600">${item.lastPurchaseDate || '---'}</span></p>
-                    ${historyHtml}
+                    <div class="mt-2 space-y-1 text-xs text-slate-500">
+                        <p>採購編號: <span class="font-medium text-slate-600">${item.purchaseNumber || 'N/A'}</span></p>
+                        <p>最近入庫: <span class="font-medium text-slate-600">${item.lastPurchaseDate || '---'}</span></p>
+                        <p>財編狀態: <span class="font-medium text-slate-600">${item.purchaseStatus || 'N/A'}</span></p>
+                        ${item.remarks ? `<p class="mt-2 pt-2 border-t border-slate-200">備註: <span class="font-normal text-slate-600 whitespace-pre-wrap">${item.remarks}</span></p>` : ''}
+                    </div>
                 </div>
                 ${actionButtonsHtml}
                 `;
@@ -619,34 +638,35 @@
         }
 
         function createItemTableRow(item) {
-            const isPlaceholder = item.id.startsWith('placeholder-');
-            
             const isInk = (majorCategoryMap[item.category] || '其他') === '墨水匣';
             const threshold = isInk ? CONSTANTS.INK_LOW_STOCK_THRESHOLD : CONSTANTS.OTHER_LOW_STOCK_THRESHOLD;
             const isLowStock = item.quantity < threshold && item.quantity > 0;
             const isZero = item.quantity === 0;
+            const isDiscontinued = item.name.includes('(停用)') || (item.purchaseStatus && item.purchaseStatus.includes('停用'));
 
             let rowClasses = 'border-b transition-colors';
-            if (isPlaceholder) {
-                 rowClasses += ' bg-slate-50';
-            }
-            if (isZero) {
+             if (isDiscontinued) {
+                 rowClasses += ' row-disabled';
+            } else if (isZero) {
                 rowClasses += ' bg-red-50 hover:bg-red-100';
             } else if (isLowStock) {
                  rowClasses += ' bg-amber-50 hover:bg-amber-100';
             }
 
             let nameCellContent = `<div>${item.name || 'N/A'}</div>`;
-            if (isZero) {
+             if (item.remarks) {
+                nameCellContent += `<div class="text-xs text-slate-500 mt-1 whitespace-pre-wrap">${item.remarks}</div>`;
+            }
+            if (isZero && !isDiscontinued) {
                 nameCellContent = `<div>
                     <div class="flex items-center font-bold text-red-800"><i data-lucide="shopping-cart" class="w-4 h-4 mr-2"></i><span>${item.name || 'N/A'}</span></div>
                     <div class="text-xs text-red-600 font-semibold mt-1">庫存已歸零 (建議庫存: ${threshold})</div>
                 </div>`;
-            } else if (isLowStock) {
+            } else if (isLowStock && !isDiscontinued) {
                  nameCellContent += `<div class="text-xs text-amber-600 font-semibold flex items-center mt-1"><i data-lucide="alert-triangle" class="w-3 h-3 mr-1"></i>請盡快採購 (建議庫存: ${threshold})</div>`;
             }
             
-            const actionButtonsCell = !isPlaceholder ? `
+            const actionButtonsCell = `
                 <div class="flex items-center justify-center space-x-1">
                     <button data-action="unseal" class="btn-action bg-blue-100 text-blue-600 rounded-md h-7 px-3 flex items-center justify-center hover:bg-blue-200 text-xs font-semibold" ${item.quantity <= 0 ? 'disabled' : ''}>拆封</button>
                     <button data-action="decrease" class="btn-action bg-slate-100 text-slate-600 rounded-md w-7 h-7 flex items-center justify-center hover:bg-slate-200 text-base font-bold" ${item.quantity <= 0 ? 'disabled' : ''}>-</button>
@@ -654,17 +674,14 @@
                     <button data-action="edit" class="btn-action text-slate-500 rounded-md w-7 h-7 flex items-center justify-center hover:bg-slate-200 hover:text-indigo-600"><i data-lucide="pencil" class="w-4 h-4 pointer-events-none"></i></button>
                     <button data-action="delete" class="btn-action text-slate-500 rounded-md w-7 h-7 flex items-center justify-center hover:bg-slate-200 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i></button>
                 </div>
-            ` : `<span class="text-xs text-slate-400">尚未入庫</span>`;
-
-            const historyText = `入庫: ${item.inboundHistory?.length || 0}次, 拆封: ${item.usageHistory?.length || 0}次`;
+            `;
 
             return `
                 <tr class="${rowClasses}" data-item-id="${item.id}">
-                    <td class="px-4 py-3 font-medium text-slate-900">${nameCellContent}</td>
+                    <td class="px-4 py-3 font-medium">${nameCellContent}</td>
                     <td class="px-4 py-3">${item.purchaseNumber || 'N/A'}</td>
-                    <td class="px-4 py-3">${item.lastPurchaseDate || '---'}</td>
-                    <td class="px-4 py-3 text-xs">${historyText}</td>
-                    <td class="px-4 py-3 text-center"><span data-role="quantity-display" class="font-bold text-base text-slate-800">${item.quantity}</span></td>
+                    <td class="px-4 py-3">${item.purchaseStatus || 'N/A'}</td>
+                    <td class="px-4 py-3 text-center"><span data-role="quantity-display" class="font-bold text-base">${item.quantity}</span></td>
                     <td class="px-4 py-3 text-center">${actionButtonsCell}</td>
                 </tr>`;
         }
@@ -697,19 +714,6 @@
         }
         
         // --- Event Listener Helpers ---
-        function setItemLoadingState(uniqueId, isLoading) {
-            const elements = document.querySelectorAll(`[data-item-id="${uniqueId}"]`);
-            elements.forEach(element => {
-                if (isLoading) {
-                    element.classList.add('opacity-50', 'pointer-events-none');
-                    const quantityDisplay = element.querySelector('[data-role="quantity-display"]');
-                    if (quantityDisplay) {
-                        quantityDisplay.innerHTML = `<svg class="animate-spin h-5 w-5 text-indigo-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
-                    }
-                }
-            });
-        }
-
         function addCardEventListeners(card, item) {
             card.addEventListener('click', (e) => handleItemAction(e, item));
         }
@@ -725,27 +729,50 @@
             });
         }
         
-        function handleItemAction(e, item) {
+        async function handleItemAction(e, item) {
             const button = e.target.closest('button[data-action]');
             if (!button || button.disabled) return;
             const action = button.dataset.action;
+
+            const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), item.id);
 
             switch (action) {
                 case 'increase':
                     openAddStockModal(item);
                     break;
-                case 'decrease':
-                    showConfirmation('確認出庫', `確定要將 "${item.name}" 的庫存減 1 嗎？`, () => unsealItem(item.id, item.quantity - 1, 'manual'), 'orange');
+                case 'decrease': {
+                    const newQuantity = item.quantity - 1;
+                    if (newQuantity < 0) return;
+                    showConfirmation('確認出庫', `確定要將 "${item.name}" 的庫存減 1 嗎？`, async () => {
+                        const today = new Date().toISOString().split('T')[0];
+                        const historyEntry = { unsealedDate: today, type: 'manual_decrease' };
+                        const updatedHistory = [...(item.usageHistory || []), historyEntry];
+                        await updateDoc(itemRef, { quantity: newQuantity, usageHistory: updatedHistory });
+                        showToast('庫存已更新');
+                    }, 'orange');
                     break;
+                }
                 case 'delete':
-                    showConfirmation('確認刪除', `您確定要永久刪除 "${item.name}" 這筆紀錄嗎？`, () => deleteItem(item.id), 'red');
+                    showConfirmation('確認刪除', `您確定要永久刪除 "${item.name}" 這筆紀錄嗎？`, async () => {
+                        await deleteDoc(itemRef);
+                        showToast('項目已刪除');
+                    }, 'red');
                     break;
                 case 'edit':
                     openEditModal(item);
                     break;
-                case 'unseal':
-                    showConfirmation('確認拆封', `確定要拆封一個 "${item.name}" 嗎？庫存將會減 1。`, () => unsealItem(item.id, item.quantity - 1, 'unseal'), 'blue');
+                case 'unseal': {
+                     const newQuantity = item.quantity - 1;
+                    if (newQuantity < 0) return;
+                    showConfirmation('確認拆封', `確定要拆封一個 "${item.name}" 嗎？庫存將會減 1。`, async () => {
+                        const today = new Date().toISOString().split('T')[0];
+                        const historyEntry = { unsealedDate: today, type: 'unseal' };
+                        const updatedHistory = [...(item.usageHistory || []), historyEntry];
+                        await updateDoc(itemRef, { quantity: newQuantity, usageHistory: updatedHistory });
+                        showToast('庫存已更新');
+                    }, 'blue');
                     break;
+                }
             }
         }
         
@@ -810,14 +837,16 @@
 
         // --- Mappings and Category Logic ---
         function initializeAndLoadMappings() {
-            let mappings = JSON.parse(localStorage.getItem(CONSTANTS.MAPPINGS_KEY));
-            if (!mappings || Object.keys(mappings).length === 0) { // Check if empty
-                localStorage.setItem(CONSTANTS.MAPPINGS_KEY, JSON.stringify(initialPurchaseNumberMap));
-                mappings = initialPurchaseNumberMap;
-            }
-            purchaseNumberMap = mappings;
-            renderMappingsList();
-            populateCategorySelects();
+            const mappingsRef = collection(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION));
+            onSnapshot(mappingsRef, (snapshot) => {
+                const newMappings = {};
+                snapshot.forEach(doc => {
+                    newMappings[doc.id] = doc.data();
+                });
+                purchaseNumberMap = { ...csvBasedMappings, ...newMappings };
+                renderMappingsList();
+                populateCategorySelects();
+            });
         }
         
         function renderMappingsList() {
@@ -884,9 +913,11 @@
             `;
         }
 
-        function populateCategorySelects() {
+        async function populateCategorySelects() {
+            const customCategoriesRef = collection(db, getCollectionPath(CONSTANTS.CUSTOM_CATEGORIES_COLLECTION));
+            const snapshot = await getDocs(customCategoriesRef);
+            const customCategories = snapshot.docs.map(doc => doc.id);
             const allCategories = [...new Set(Object.values(purchaseNumberMap).map(item => item.category))];
-            const customCategories = JSON.parse(localStorage.getItem(CONSTANTS.CUSTOM_CATEGORIES_KEY)) || [];
             const finalCategories = [...new Set([...allCategories, ...customCategories])].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
             
             const selects = [DOM.categorySelect, DOM.newItemCategorySelect];
@@ -924,41 +955,14 @@
             }
         }
 
-        function saveCustomCategory(categoryName) {
-            let categories = JSON.parse(localStorage.getItem(CONSTANTS.CUSTOM_CATEGORIES_KEY)) || [];
-            if (!categories.includes(categoryName)) {
-                categories.push(categoryName);
-                localStorage.setItem(CONSTANTS.CUSTOM_CATEGORIES_KEY, JSON.stringify(categories));
-                populateCategorySelects();
-            }
+        async function saveCustomCategory(categoryName) {
+            const categoryRef = doc(db, getCollectionPath(CONSTANTS.CUSTOM_CATEGORIES_COLLECTION), categoryName);
+            await setDoc(categoryRef, { name: categoryName });
+            populateCategorySelects();
         }
 
 
         // --- Update/Delete/Edit Functions ---
-        function unsealItem(id, newQuantity, type = 'unseal') {
-            const item = allSupplies.find(s => s.id === id);
-            if (!item) return;
-
-            const today = new Date().toISOString().split('T')[0];
-            const historyEntry = type === 'unseal' ? { unsealedDate: today, type: 'unseal' } : { unsealedDate: today, type: 'manual_decrease' };
-
-            item.quantity = newQuantity;
-            if(!item.usageHistory) item.usageHistory = [];
-            item.usageHistory.push(historyEntry);
-
-            saveData();
-            renderInventory();
-            renderUnsealHistory();
-            showToast('庫存已更新');
-        }
-
-        function deleteItem(id) {
-            allSupplies = allSupplies.filter(item => item.id !== id);
-            saveData();
-            renderInventory();
-            renderUnsealHistory();
-            showToast('項目已刪除');
-        }
         
         function openAddStockModal(item) {
             currentlyEditingItemId = item.id;
@@ -971,11 +975,13 @@
             currentlyEditingItemId = item.id;
             DOM.editItemForm['edit-last-purchase-date'].value = item.lastPurchaseDate || '';
             DOM.editItemForm['edit-quantity'].value = item.quantity;
+            DOM.editItemForm['edit-purchase-status'].value = item.purchaseStatus || '';
+            DOM.editItemForm['edit-remarks'].value = item.remarks || '';
             openModal(DOM.editItemModal);
         }
 
-        function setupAddStockFormListener() {
-            DOM.addStockForm.addEventListener('submit', (e) => {
+        async function setupAddStockFormListener() {
+            DOM.addStockForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!currentlyEditingItemId) return;
                 
@@ -989,47 +995,49 @@
 
                 const item = allSupplies.find(s => s.id === currentlyEditingItemId);
                 if (item) {
-                    item.quantity += quantity;
-                    item.lastPurchaseDate = date;
-                    if (!item.inboundHistory) item.inboundHistory = [];
-                    item.inboundHistory.push({ date, quantity, type: 'restock' });
+                    const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), item.id);
+                    const newQuantity = item.quantity + quantity;
+                    const historyEntry = { date, quantity, type: 'restock' };
+                    const updatedHistory = [...(item.inboundHistory || []), historyEntry];
+
+                    await updateDoc(itemRef, {
+                        quantity: newQuantity,
+                        lastPurchaseDate: date,
+                        inboundHistory: updatedHistory
+                    });
                     
-                    saveData();
-                    renderInventory();
-                    renderUnsealHistory();
                     closeModal(DOM.addStockModal);
                     showToast('入庫成功');
                 }
             });
         }
         
-        function setupEditFormListener() {
-            DOM.editItemForm.addEventListener('submit', (e) => {
+        async function setupEditFormListener() {
+            DOM.editItemForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!currentlyEditingItemId) return;
                 
                 const newLastPurchaseDate = DOM.editItemForm['edit-last-purchase-date'].value;
                 const newQuantity = parseInt(DOM.editItemForm['edit-quantity'].value, 10);
+                const newPurchaseStatus = DOM.editItemForm['edit-purchase-status'].value.trim();
+                const newRemarks = DOM.editItemForm['edit-remarks'].value.trim();
+
 
                 if (isNaN(newQuantity)) {
                     showToast('請輸入有效的庫存數量', 'error');
                     return;
                 }
 
-                const item = allSupplies.find(s => s.id === currentlyEditingItemId);
-                if (item) {
-                    item.quantity = newQuantity;
-                    item.lastPurchaseDate = newLastPurchaseDate;
-                    if(item.inboundHistory && item.inboundHistory.length > 0) {
-                         item.inboundHistory[item.inboundHistory.length - 1].date = newLastPurchaseDate;
-                    }
-                    
-                    saveData();
-                    renderInventory();
-                    renderUnsealHistory();
-                    closeModal(DOM.editItemModal);
-                    showToast('庫存項目更新成功');
-                }
+                const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), currentlyEditingItemId);
+                await updateDoc(itemRef, {
+                    quantity: newQuantity,
+                    lastPurchaseDate: newLastPurchaseDate,
+                    purchaseStatus: newPurchaseStatus,
+                    remarks: newRemarks
+                });
+                
+                closeModal(DOM.editItemModal);
+                showToast('庫存項目更新成功');
             });
         }
 
@@ -1054,6 +1062,7 @@
         function downloadCSV() {
             const headers = [
                 "採購編號", "耗材名稱", "品項", "庫存量", "最近入庫日期", 
+                "財編狀態", "備註",
                 "入庫紀錄", "拆封紀錄"
             ];
 
@@ -1076,6 +1085,8 @@
                     sanitizeField(item.category),
                     item.quantity,
                     sanitizeField(item.lastPurchaseDate),
+                    sanitizeField(item.purchaseStatus),
+                    sanitizeField(item.remarks),
                     sanitizeField(inboundHistory),
                     sanitizeField(usageHistory)
                 ].join(',');
@@ -1095,11 +1106,69 @@
             showToast('報表已開始下載');
         }
 
+        // --- Firebase Functions ---
+        function getCollectionPath(collectionName) {
+            const appId = getAppId();
+            // Using a public path for easier sharing based on user request.
+            return `artifacts/${appId}/public/data/${collectionName}`;
+        }
+
+        async function seedInitialData() {
+            const suppliesRef = collection(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION));
+            const q = query(suppliesRef, limit(1));
+            const snapshot = await getDocs(q);
+
+            if (snapshot.empty) {
+                console.log("資料庫是空的，正在從CSV植入初始資料...");
+                const initialSupplies = getInitialDataFromCSV();
+                const batch = writeBatch(db);
+                initialSupplies.forEach(item => {
+                    const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), item.id);
+                    batch.set(itemRef, item);
+                });
+                await batch.commit();
+                console.log("初始資料植入完成。");
+            } else {
+                console.log("資料庫已有資料，跳過植入步驟。");
+            }
+        }
+        
         // --- Main Initialization ---
-        function main() {
-            initializeAndLoadMappings();
+        async function main() {
+            // --- Firebase Setup ---
+            try {
+                 if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("YOUR_")) {
+                    DOM.loadingState.innerHTML = `<p class="text-red-500">錯誤：請依照檔案中的註解，貼上您的 Firebase 設定碼。</p>`;
+                    return;
+                }
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                await signInAnonymously(auth);
+                userId = auth.currentUser.uid;
+                
+                await seedInitialData();
+
+            } catch (error) {
+                console.error("Firebase 初始化失敗:", error);
+                DOM.loadingState.innerHTML = `<p class="text-red-500">錯誤：無法連接到資料庫。請確認 Firebase 設定是否正確。</p>`;
+                return;
+            }
+
+            // --- UI and Listeners Setup ---
             setView(currentView);
             lucide.createIcons();
+            
+            // Listen for real-time updates
+            const suppliesQuery = collection(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION));
+            onSnapshot(suppliesQuery, (snapshot) => {
+                allSupplies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderInventory();
+                renderUnsealHistory();
+            });
+
+            initializeAndLoadMappings();
             
             // --- EVENT LISTENERS ---
             DOM.viewToggle.addEventListener('click', (e) => {
@@ -1121,11 +1190,11 @@
             DOM.closeEditModalBtn.addEventListener('click', () => closeModal(DOM.editItemModal));
             DOM.editItemModal.addEventListener('click', (e) => { if (e.target === DOM.editItemModal) closeModal(DOM.editItemModal); });
             
-            DOM.addCategoryBtn.addEventListener('click', () => {
+            DOM.addCategoryBtn.addEventListener('click', async () => {
                 const newCategory = prompt('請輸入新的耗材類別(品項)名稱：');
                 if (newCategory && newCategory.trim() !== '') {
                     const trimmedCategory = newCategory.trim();
-                    saveCustomCategory(trimmedCategory);
+                    await saveCustomCategory(trimmedCategory);
                     DOM.newItemCategorySelect.value = trimmedCategory;
                     showToast(`類別 "${trimmedCategory}" 已新增`);
                 }
@@ -1188,29 +1257,27 @@
                 }
             });
 
-            DOM.addMappingForm.addEventListener('submit', (e) => {
+            DOM.addMappingForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const number = document.getElementById('new-purchase-number').value.trim();
                 const name = document.getElementById('new-item-name').value.trim();
                 const category = DOM.newItemCategorySelect.value;
                 if (!number || !name || !category) return;
                 
-                let mappings = JSON.parse(localStorage.getItem(CONSTANTS.MAPPINGS_KEY)) || {};
-
                 if (editingKey && editingKey !== number) {
-                    delete mappings[editingKey];
+                     const oldDocRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), editingKey);
+                     await deleteDoc(oldDocRef);
                 }
-                
-                mappings[number] = { name, category };
-                localStorage.setItem(CONSTANTS.MAPPINGS_KEY, JSON.stringify(mappings));
-                
+
+                const docRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), number);
+                await setDoc(docRef, { name, category });
+
                 if (editingKey) {
                     cancelEditMode();
                 } else {
                     DOM.addMappingForm.reset();
                 }
                 
-                initializeAndLoadMappings();
                 showToast('品項儲存成功！');
             });
 
@@ -1225,19 +1292,16 @@
                     const key = deleteButton.dataset.key;
                         showConfirmation(
                             '確認刪除',
-                            `您確定要刪除品項 "${key}" 嗎？此操作無法復原。`,
-                            () => {
-                                let mappings = JSON.parse(localStorage.getItem(CONSTANTS.MAPPINGS_KEY)) || {};
-                                delete mappings[key];
-                                localStorage.setItem(CONSTANTS.MAPPINGS_KEY, JSON.stringify(mappings));
-                                initializeAndLoadMappings();
+                            `您確定要刪除品項 "${key}" 嗎？`,
+                            async () => {
+                                 const docRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), key);
+                                 await deleteDoc(docRef);
                                 showToast('品項已刪除');
                             }
                         );
                 }
             });
-
-            loadData();
+            
             setupFormListener();
             setupAddStockFormListener();
             setupEditFormListener();
