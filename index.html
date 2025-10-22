@@ -135,7 +135,7 @@
                 </div>
                 <div class="md:col-span-2">
                     <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors btn-action flex items-center justify-center">
-                         <i data-lucide="plus" class="w-5 h-5 mr-2"></i> 新增至庫存
+                        <i data-lucide="plus" class="w-5 h-5 mr-2"></i> 新增至庫存
                     </button>
                 </div>
             </form>
@@ -147,8 +147,7 @@
                 <div class="flex justify-center items-center space-x-2">
                     <svg class="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8
- 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     <p class="text-slate-500">正在連接資料庫...</p>
                 </div>
@@ -283,25 +282,12 @@
     
     <!-- Firebase SDK -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, collection, onSnapshot, doc, getDocs,
             setDoc, updateDoc, deleteDoc, writeBatch, query, limit 
-        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-        /* --- 請在此處貼上您的 Firebase 設定碼 --- */
-        /* 1. 依照 "Firebase 設定指南.md" 的說明，取得您的 firebaseConfig 物件。 */
-        /* 2. 將您複製的內容，完整取代掉下面這幾行。 */
-        const firebaseConfig = {
-            apiKey: "AIzaSyD1Mo73znKs93FiyaXVCnKERAaWzSk_WFY",
-            authDomain: "epson9000-9bcf2.firebaseapp.com",
-            projectId: "epson9000-9bcf2",
-            storageBucket: "epson9000-9bcf2.firebasestorage.app",
-            messagingSenderId: "681687390935",
-            appId: "1:681687390935:web:563c063abd00054fc06e92"
-        };
-        /* ------------------------------------ */
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- CONSTANTS ---
         const CONSTANTS = {
@@ -400,8 +386,9 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
 
         // --- Helper Functions ---
         function getAppId() {
-            // In a real shared environment, this would be a fixed ID for your app.
-            return 'shared-inventory-app';
+            // For GitHub deployment, use a fixed App ID. 
+            // This ensures all users on your GitHub Pages site share the same database.
+            return 'epson9000-inventory-app-github'; 
         }
 
         function showToast(message, type = 'success') {
@@ -477,8 +464,11 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
 
         // --- UI Rendering ---
         function renderInventory() {
-            DOM.inventoryListSection.style.display = 'block';
-            DOM.loadingState.style.display = 'none';
+            // Check if loading state is still present before modifying UI
+            if (DOM.loadingState && DOM.loadingState.style.display !== 'none') {
+                 DOM.inventoryListSection.style.display = 'block';
+                 DOM.loadingState.style.display = 'none';
+            }
             const mainListContainer = DOM.inventoryList;
 
             mainListContainer.innerHTML = '';
@@ -691,8 +681,8 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
             historyList.innerHTML = '';
             
             const allHistory = allSupplies
-                .flatMap(item => (item.usageHistory || []).map(h => ({ name: item.name, category: item.category, date: h.unsealedDate })))
-                .sort((a, b) => new Date(b.date) - new Date(a.date));
+                .flatMap(item => (item.usageHistory || []).map(h => ({ ...h, name: item.name, category: item.category, itemId: item.id })))
+                .sort((a, b) => new Date(b.unsealedDate) - new Date(a.unsealedDate));
 
             if (allHistory.length > 0) {
                 DOM.unsealHistorySection.style.display = 'block';
@@ -700,14 +690,20 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                     const li = document.createElement('div');
                     li.className = 'text-sm text-slate-600 border-b border-slate-100 py-2 flex justify-between items-center';
                     li.innerHTML = `
-                        <div>
+                        <div class="flex-1">
                             <span class="font-semibold text-slate-800">${entry.name}</span>
                             <span class="text-xs text-slate-400 ml-2">(${majorCategoryMap[entry.category] || '其他'})</span>
                         </div>
-                        <span class="text-xs font-mono bg-slate-100 text-slate-500 px-2 py-0.5 rounded">${entry.date}</span>
+                        <div class="flex items-center gap-3">
+                           <span class="text-xs font-mono bg-slate-100 text-slate-500 px-2 py-0.5 rounded">${entry.unsealedDate}</span>
+                           <button data-item-id="${entry.itemId}" data-history-id="${entry.id}" class="delete-history-btn text-slate-400 hover:text-red-500" title="刪除此紀錄">
+                                <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
+                           </button>
+                        </div>
                     `;
                     historyList.appendChild(li);
                 });
+                lucide.createIcons();
             } else {
                 DOM.unsealHistorySection.style.display = 'none';
             }
@@ -745,7 +741,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                     if (newQuantity < 0) return;
                     showConfirmation('確認出庫', `確定要將 "${item.name}" 的庫存減 1 嗎？`, async () => {
                         const today = new Date().toISOString().split('T')[0];
-                        const historyEntry = { unsealedDate: today, type: 'manual_decrease' };
+                        const historyEntry = { id: crypto.randomUUID(), unsealedDate: today, type: 'manual_decrease' };
                         const updatedHistory = [...(item.usageHistory || []), historyEntry];
                         await updateDoc(itemRef, { quantity: newQuantity, usageHistory: updatedHistory });
                         showToast('庫存已更新');
@@ -766,7 +762,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                     if (newQuantity < 0) return;
                     showConfirmation('確認拆封', `確定要拆封一個 "${item.name}" 嗎？庫存將會減 1。`, async () => {
                         const today = new Date().toISOString().split('T')[0];
-                        const historyEntry = { unsealedDate: today, type: 'unseal' };
+                        const historyEntry = { id: crypto.randomUUID(), unsealedDate: today, type: 'unseal' };
                         const updatedHistory = [...(item.usageHistory || []), historyEntry];
                         await updateDoc(itemRef, { quantity: newQuantity, usageHistory: updatedHistory });
                         showToast('庫存已更新');
@@ -843,7 +839,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 snapshot.forEach(doc => {
                     newMappings[doc.id] = doc.data();
                 });
-                purchaseNumberMap = { ...csvBasedMappings, ...newMappings };
+                purchaseNumberMap = { ...newMappings }; // Don't merge with CSV here, as CSV is just for seeding
                 renderMappingsList();
                 populateCategorySelects();
             });
@@ -1023,8 +1019,8 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 const newRemarks = DOM.editItemForm['edit-remarks'].value.trim();
 
 
-                if (isNaN(newQuantity)) {
-                    showToast('請輸入有效的庫存數量', 'error');
+                if (isNaN(newQuantity) || newQuantity < 0) { // Also check for negative
+                    showToast('請輸入有效的庫存數量 (必須是非負整數)', 'error');
                     return;
                 }
 
@@ -1038,6 +1034,49 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 
                 closeModal(DOM.editItemModal);
                 showToast('庫存項目更新成功');
+            });
+        }
+        
+        // --- Unseal History Deletion ---
+        function setupUnsealHistoryListener() {
+            DOM.unsealHistoryList.addEventListener('click', e => {
+                const deleteBtn = e.target.closest('.delete-history-btn');
+                if (!deleteBtn) return;
+
+                const { itemId, historyId } = deleteBtn.dataset;
+                const item = allSupplies.find(s => s.id === itemId);
+
+                if (!item) {
+                    console.error("找不到對應的項目來刪除紀錄");
+                    showToast('操作失敗，找不到項目', 'error');
+                    return;
+                }
+                
+                // Find the specific history entry
+                const historyEntry = (item.usageHistory || []).find(h => h.id === historyId);
+                if (!historyEntry) {
+                     console.error("找不到對應的歷史紀錄");
+                     showToast('操作失敗，找不到紀錄', 'error');
+                     return;
+                }
+
+
+                showConfirmation('確認刪除紀錄', `您確定要刪除這筆 "${item.name}" 的拆封紀錄嗎？庫存將會加回 1。`, async () => {
+                    const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), itemId);
+                    const newQuantity = item.quantity + 1;
+                    const newUsageHistory = (item.usageHistory || []).filter(h => h.id !== historyId);
+
+                    try {
+                        await updateDoc(itemRef, {
+                            quantity: newQuantity,
+                            usageHistory: newUsageHistory,
+                        });
+                        showToast('拆封紀錄已刪除');
+                    } catch(err) {
+                        console.error("刪除拆封紀錄失敗:", err);
+                        showToast('刪除失敗，請稍後再試', 'error');
+                    }
+                });
             });
         }
 
@@ -1109,8 +1148,8 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
         // --- Firebase Functions ---
         function getCollectionPath(collectionName) {
             const appId = getAppId();
-            // Using a public path for easier sharing based on user request.
-            return `artifacts/${appId}/public/data/${collectionName}`;
+            // Using a public path suitable for shared access on GitHub Pages
+            return `artifacts/${appId}/public/data/${collectionName}`; 
         }
 
         async function seedInitialData() {
@@ -1137,23 +1176,62 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
         async function main() {
             // --- Firebase Setup ---
             try {
-                 if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("YOUR_")) {
-                    DOM.loadingState.innerHTML = `<p class="text-red-500">錯誤：請依照檔案中的註解，貼上您的 Firebase 設定碼。</p>`;
+                /* --- GitHub 發布專用 Firebase 設定 --- */
+                const firebaseConfig = {
+                    apiKey: "AIzaSyD1Mo73znKs93FiyaXVCnKERAaWzSk_WFY",
+                    authDomain: "epson9000-9bcf2.firebaseapp.com",
+                    projectId: "epson9000-9bcf2",
+                    storageBucket: "epson9000-9bcf2.firebasestorage.app",
+                    messagingSenderId: "681687390935",
+                    appId: "1:681687390935:web:563c063abd00054fc06e92"
+                };
+                /* ------------------------------------ */
+                
+                if (!firebaseConfig.apiKey.startsWith("AIza")) {
+                    DOM.loadingState.innerHTML = `<p class="text-red-500">錯誤：請在程式碼中填入您的 Firebase 設定碼。</p>`;
                     return;
                 }
+
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-
+                
                 await signInAnonymously(auth);
+
                 userId = auth.currentUser.uid;
                 
                 await seedInitialData();
 
             } catch (error) {
                 console.error("Firebase 初始化失敗:", error);
-                DOM.loadingState.innerHTML = `<p class="text-red-500">錯誤：無法連接到資料庫。請確認 Firebase 設定是否正確。</p>`;
-                return;
+                if (error.code === 'auth/configuration-not-found') {
+                    DOM.loadingState.innerHTML = `<div class="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-lg text-left max-w-2xl mx-auto">
+                                                    <div class="flex items-center">
+                                                        <div class="flex-shrink-0">
+                                                            <i data-lucide="alert-triangle" class="h-6 w-6 text-amber-600"></i>
+                                                        </div>
+                                                        <div class="ml-4">
+                                                            <h3 class="text-lg font-bold text-amber-800">需要一個重要設定！</h3>
+                                                            <p class="text-slate-700 mt-2">您的 Firebase 專案尚未啟用「匿名登入」，這是讓應用程式連接資料庫的必要步驟。</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-4">
+                                                        <p class="text-slate-600 font-semibold">請依照以下步驟完成設定：</p>
+                                                        <ol class="list-decimal list-inside text-slate-600 space-y-2 mt-2 pl-2">
+                                                            <li>點擊此連結前往您的 Firebase 專案：<a href="https://console.firebase.google.com/" target="_blank" class="font-semibold text-blue-600 underline hover:text-blue-800">Firebase 控制台</a>。</li>
+                                                            <li>在左側選單中，找到並點擊「<b>Authentication</b>」。</li>
+                                                            <li>進入 Authentication 後，點擊上方的「<b>Sign-in method</b>」分頁。</li>
+                                                            <li>在服務商列表中找到「<b>匿名</b>」，點擊它並將開關設定為「<b>啟用</b>」，然後儲存。</li>
+                                                            <li>完成後，回到此頁面並<b>重新整理</b>。</li>
+                                                        </ol>
+                                                        <p class="mt-4 text-xs text-slate-500">這不是程式碼的錯誤，而是一個必須在 Firebase 網站上完成的專案設定。</p>
+                                                    </div>
+                                                </div>`;
+                    lucide.createIcons();
+                } else {
+                    DOM.loadingState.innerHTML = `<p class="text-red-500">錯誤：無法連接到資料庫。請確認 Firebase 設定是否正確。</p>`;
+                }
+                return; // Stop execution if there's an error
             }
 
             // --- UI and Listeners Setup ---
@@ -1166,6 +1244,11 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 allSupplies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderInventory();
                 renderUnsealHistory();
+            }, (error) => {
+                console.error("讀取庫存資料時發生錯誤:", error);
+                showToast('讀取庫存資料失敗，請稍後再試', 'error');
+                // Optionally display a more prominent error message on the page
+                DOM.inventoryList.innerHTML = `<p class="text-red-500 text-center">無法載入庫存資料。</p>`;
             });
 
             initializeAndLoadMappings();
@@ -1302,9 +1385,93 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 }
             });
             
+            // This function is defined below in setup file
             setupFormListener();
             setupAddStockFormListener();
             setupEditFormListener();
+            setupUnsealHistoryListener();
+        }
+
+        async function setupFormListener() {
+            document.getElementById('add-item-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const purchaseNumber = DOM.purchaseNumberInput.value.trim();
+                if (!purchaseNumber) {
+                    showToast('請先選擇或輸入一個有效的採購編號', 'error');
+                    DOM.purchaseNumberFeedback.textContent = '此欄位為必填項';
+                    return;
+                }
+
+                const name = DOM.itemNameInput.value.trim();
+                // Ensure category is selected or derived correctly
+                const category = DOM.categorySelect.value;
+                 if (!category) {
+                     showToast('請選擇耗材類別', 'error');
+                     return;
+                 }
+
+
+                const quantityInput = document.getElementById('item-quantity');
+                const quantity = parseInt(quantityInput.value, 10);
+                 if (isNaN(quantity) || quantity < 0) {
+                    showToast('請輸入有效的庫存數量 (必須是非負整數)', 'error');
+                    quantityInput.focus(); // Highlight the input field
+                    return;
+                 }
+
+
+                const purchaseDate = DOM.itemPurchaseDate.value;
+                const remarks = document.getElementById('item-remarks').value.trim();
+
+                const existingItem = allSupplies.find(item => item.id === purchaseNumber);
+
+                try {
+                    if (existingItem) {
+                        // Item exists, update it by adding stock
+                        const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), purchaseNumber);
+                        const newQuantity = existingItem.quantity + quantity;
+                        const historyEntry = { date: purchaseDate || new Date().toISOString().split('T')[0], quantity, type: 'restock' }; // Use current date if none provided
+                        const updatedInboundHistory = [...(existingItem.inboundHistory || []), historyEntry];
+                        await updateDoc(itemRef, {
+                            quantity: newQuantity,
+                            // Only update lastPurchaseDate if a new date is provided, otherwise keep the existing one or set initial if none
+                            lastPurchaseDate: purchaseDate || existingItem.lastPurchaseDate || new Date().toISOString().split('T')[0], 
+                            remarks: remarks || existingItem.remarks, // Keep existing remarks if new one is empty
+                            inboundHistory: updatedInboundHistory,
+                        });
+                        showToast(`已為 "${name}" 添加入庫 ${quantity} 件`);
+                    } else {
+                        // New item, create it
+                         const newItem = {
+                            id: purchaseNumber,
+                            purchaseNumber,
+                            name,
+                            category,
+                            quantity,
+                            lastPurchaseDate: purchaseDate || new Date().toISOString().split('T')[0], // Use current date if none provided
+                            purchaseStatus: '',
+                            remarks: remarks,
+                            usageHistory: [],
+                            inboundHistory: [{ date: purchaseDate || new Date().toISOString().split('T')[0], quantity, type: 'initial_add' }], // Use current date if none provided
+                        };
+                        const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), purchaseNumber);
+                        await setDoc(itemRef, newItem);
+                        showToast(`"${name}" 已成功新增至庫存`);
+                    }
+
+                    // Reset the form regardless of add/update
+                    document.getElementById('add-item-form').reset();
+                    // Clear fields derived from lookup as well
+                     DOM.itemNameInput.value = '';
+                     DOM.categorySelect.value = '';
+                     DOM.purchaseNumberFeedback.textContent = '';
+
+
+                } catch (error) {
+                    console.error("儲存庫存項目時發生錯誤:", error);
+                    showToast('儲存失敗，請稍後再試', 'error');
+                }
+            });
         }
 
         main();
