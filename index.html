@@ -833,15 +833,46 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
 
         // --- Mappings and Category Logic ---
         function initializeAndLoadMappings() {
+            // 1. Parse CSV data first to get base mappings
+            const csvBasedMappings = {};
+            const lines = csvData.trim().split('\n').slice(1); // Skip header
+            lines.forEach(line => {
+                if (!line.trim()) return;
+                const [category, purchaseNumber, name] = parseCsvLine(line.trim());
+                const cleanedPurchaseNumber = purchaseNumber.replace(/"/g, '').trim();
+                const cleanedName = name.replace(/"/g, '').trim();
+                const cleanedCategory = category.replace(/"/g, '').trim();
+
+                if (cleanedPurchaseNumber) { // Only add if there's a purchase number
+                    csvBasedMappings[cleanedPurchaseNumber] = { name: cleanedName, category: cleanedCategory };
+                } else if (cleanedName) {
+                    // Handle items with name but no number if needed, maybe using manual key?
+                    // For consistency with seeding, let's keep the manual key logic
+                    const manualKey = `manual-${cleanedName}`;
+                    csvBasedMappings[manualKey] = { name: cleanedName, category: cleanedCategory };
+                }
+            });
+
+            // 2. Listen to Firestore for updates
             const mappingsRef = collection(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION));
             onSnapshot(mappingsRef, (snapshot) => {
-                const newMappings = {};
+                const firestoreMappings = {};
                 snapshot.forEach(doc => {
-                    newMappings[doc.id] = doc.data();
+                    firestoreMappings[doc.id] = doc.data();
                 });
-                purchaseNumberMap = { ...newMappings }; // Don't merge with CSV here, as CSV is just for seeding
+                // 3. Merge Firestore data over CSV defaults
+                purchaseNumberMap = { ...csvBasedMappings, ...firestoreMappings };
                 renderMappingsList();
                 populateCategorySelects();
+            }, (error) => {
+                 console.error("讀取品項對照表時發生錯誤:", error);
+                 showToast('讀取品項對照表失敗', 'error');
+                 // Initialize with CSV data even if Firestore fails initially
+                 if (Object.keys(purchaseNumberMap).length === 0) { // Check if map wasn't already populated
+                      purchaseNumberMap = { ...csvBasedMappings };
+                      renderMappingsList();
+                      populateCategorySelects();
+                 }
             });
         }
         
@@ -913,7 +944,8 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
             const customCategoriesRef = collection(db, getCollectionPath(CONSTANTS.CUSTOM_CATEGORIES_COLLECTION));
             const snapshot = await getDocs(customCategoriesRef);
             const customCategories = snapshot.docs.map(doc => doc.id);
-            const allCategories = [...new Set(Object.values(purchaseNumberMap).map(item => item.category))];
+            // Derive categories also from the *current* purchaseNumberMap which includes CSV + Firestore
+            const allCategories = [...new Set(Object.values(purchaseNumberMap).map(item => item.category))]; 
             const finalCategories = [...new Set([...allCategories, ...customCategories])].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
             
             const selects = [DOM.categorySelect, DOM.newItemCategorySelect];
@@ -929,7 +961,13 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                     option.textContent = categoryName;
                     select.appendChild(option);
                 });
-                select.value = currentVal;
+                // Restore previous selection if possible, otherwise leave it (or set to placeholder if it exists)
+                 if (finalCategories.includes(currentVal)) {
+                     select.value = currentVal;
+                 } else if (!placeholder) {
+                     select.value = ''; // Or select the first available option?
+                 }
+
             });
         }
 
@@ -943,10 +981,14 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                         option.value = categoryName;
                         option.textContent = categoryName;
                         select.appendChild(option);
+                         // Re-sort options? Optional, might be complex if done frequently
                     }
             });
             
             if (selectAfterAdding) {
+                // Ensure the category select is enabled before setting the value
+                DOM.categorySelect.disabled = false;
+                DOM.categorySelect.classList.remove('bg-slate-50');
                 DOM.categorySelect.value = categoryName;
             }
         }
@@ -954,7 +996,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
         async function saveCustomCategory(categoryName) {
             const categoryRef = doc(db, getCollectionPath(CONSTANTS.CUSTOM_CATEGORIES_COLLECTION), categoryName);
             await setDoc(categoryRef, { name: categoryName });
-            populateCategorySelects();
+            populateCategorySelects(); // Refresh dropdowns after saving
         }
 
 
@@ -1114,8 +1156,9 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 const inboundHistory = (item.inboundHistory || [])
                     .map(h => `${h.date}: ${h.quantity}件`)
                     .join('; ');
+                // Make sure to extract the date from usageHistory
                 const usageHistory = (item.usageHistory || [])
-                    .map(h => h.unsealedDate)
+                    .map(h => h.unsealedDate) 
                     .join('; ');
                 
                 return [
@@ -1251,7 +1294,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 DOM.inventoryList.innerHTML = `<p class="text-red-500 text-center">無法載入庫存資料。</p>`;
             });
 
-            initializeAndLoadMappings();
+            initializeAndLoadMappings(); // This now loads CSV defaults first, then listens for Firestore
             
             // --- EVENT LISTENERS ---
             DOM.viewToggle.addEventListener('click', (e) => {
@@ -1278,7 +1321,8 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 if (newCategory && newCategory.trim() !== '') {
                     const trimmedCategory = newCategory.trim();
                     await saveCustomCategory(trimmedCategory);
-                    DOM.newItemCategorySelect.value = trimmedCategory;
+                     // Set the newly added category in the dropdown in the mapping modal
+                     DOM.newItemCategorySelect.value = trimmedCategory; 
                     showToast(`類別 "${trimmedCategory}" 已新增`);
                 }
             });
@@ -1293,22 +1337,32 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 resultsContainer.innerHTML = '';
                 feedbackEl.textContent = '';
                 
+                 // Clear derived fields when input changes
+                 DOM.itemNameInput.value = '';
+                 DOM.categorySelect.value = '';
+                 DOM.categorySelect.disabled = true;
+                 DOM.categorySelect.classList.add('bg-slate-50');
+
                 if (!searchTerm) {
                     resultsContainer.classList.add('hidden');
                     return;
                 }
 
                 const results = Object.entries(purchaseNumberMap).filter(([key, value]) => {
-                    return key.toLowerCase().includes(searchTerm) || 
-                           value.name.toLowerCase().includes(searchTerm) ||
-                           value.category.toLowerCase().includes(searchTerm);
+                    // Make sure value exists and has properties before accessing them
+                    return value && (
+                           key.toLowerCase().includes(searchTerm) || 
+                           (value.name && value.name.toLowerCase().includes(searchTerm)) ||
+                           (value.category && value.category.toLowerCase().includes(searchTerm))
+                    );
                 });
+
 
                 if (results.length > 0) {
                     results.forEach(([key, value]) => {
                         const resultEl = document.createElement('div');
                         resultEl.className = 'p-2 hover:bg-indigo-100 cursor-pointer';
-                        resultEl.innerHTML = `<p class="font-semibold text-slate-800">${value.name}</p><p class="text-sm text-slate-500">${key}</p>`;
+                        resultEl.innerHTML = `<p class="font-semibold text-slate-800">${value.name || 'N/A'}</p><p class="text-sm text-slate-500">${key}</p>`;
                         resultEl.dataset.key = key;
                         resultsContainer.appendChild(resultEl);
                     });
@@ -1325,14 +1379,20 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                     const key = resultEl.dataset.key;
                     const item = purchaseNumberMap[key];
                     
-                    DOM.purchaseNumberInput.value = key;
-                    DOM.itemNameInput.value = item.name;
-                    addCategoryOption(item.category, true);
+                    if (item) { // Ensure item exists in the map
+                        DOM.purchaseNumberInput.value = key;
+                        DOM.itemNameInput.value = item.name;
+                        addCategoryOption(item.category, true); // This will enable and set the category dropdown
 
-                    DOM.purchaseNumberResults.classList.add('hidden');
-                    DOM.purchaseNumberFeedback.textContent = '';
+                        DOM.purchaseNumberResults.classList.add('hidden');
+                        DOM.purchaseNumberFeedback.textContent = '';
+                    } else {
+                        console.error("Selected item not found in purchaseNumberMap:", key);
+                        showToast('選擇品項時發生錯誤', 'error');
+                    }
                 }
             });
+
 
             document.addEventListener('click', (e) => {
                 if (!DOM.purchaseNumberInput.contains(e.target) && !DOM.purchaseNumberResults.contains(e.target)) {
@@ -1345,24 +1405,48 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 const number = document.getElementById('new-purchase-number').value.trim();
                 const name = document.getElementById('new-item-name').value.trim();
                 const category = DOM.newItemCategorySelect.value;
-                if (!number || !name || !category) return;
+                if (!number || !name || !category) {
+                     showToast('請填寫所有欄位', 'error');
+                     return;
+                 }
                 
+                // Prevent overwriting if not in edit mode and key already exists? Optional.
+                // if (!editingKey && purchaseNumberMap[number]) {
+                //    showToast(`採購編號 "${number}" 已存在`, 'error');
+                //    return;
+                // }
+
+
                 if (editingKey && editingKey !== number) {
+                     // If the key (purchase number) is changed during edit, delete the old one first
                      const oldDocRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), editingKey);
-                     await deleteDoc(oldDocRef);
+                     try {
+                          await deleteDoc(oldDocRef);
+                     } catch (err) {
+                          console.warn("Could not delete old mapping doc:", editingKey, err);
+                          // Proceed with adding the new one anyway? Or show error?
+                          // Let's proceed but maybe log it more prominently.
+                     }
                 }
 
                 const docRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), number);
-                await setDoc(docRef, { name, category });
+                try {
+                    await setDoc(docRef, { name, category });
 
-                if (editingKey) {
-                    cancelEditMode();
-                } else {
-                    DOM.addMappingForm.reset();
+                    if (editingKey) {
+                        cancelEditMode();
+                    } else {
+                        DOM.addMappingForm.reset();
+                    }
+                    showToast('品項儲存成功！');
+
+                } catch (error) {
+                    console.error("儲存品項對照時發生錯誤:", error);
+                    showToast('儲存品項失敗', 'error');
                 }
-                
-                showToast('品項儲存成功！');
+
             });
+
 
             DOM.mappingsListContainer.addEventListener('click', (e) => {
                 const editButton = e.target.closest('.edit-mapping-btn');
@@ -1375,11 +1459,20 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                     const key = deleteButton.dataset.key;
                         showConfirmation(
                             '確認刪除',
-                            `您確定要刪除品項 "${key}" 嗎？`,
+                            `您確定要刪除品項 "${key}" 嗎？這不會刪除已存在的庫存項目，只會從對照表中移除。`, // Clarify deletion scope
                             async () => {
                                  const docRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), key);
-                                 await deleteDoc(docRef);
-                                showToast('品項已刪除');
+                                 try {
+                                      await deleteDoc(docRef);
+                                      showToast('品項已刪除');
+                                      // If the deleted item was being edited, cancel edit mode
+                                      if (editingKey === key) {
+                                          cancelEditMode();
+                                      }
+                                 } catch (error) {
+                                      console.error("刪除品項對照時發生錯誤:", error);
+                                      showToast('刪除品項失敗', 'error');
+                                 }
                             }
                         );
                 }
@@ -1403,6 +1496,13 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 }
 
                 const name = DOM.itemNameInput.value.trim();
+                 // Check if name was derived from selection, if not, maybe error?
+                 if (!name) {
+                     showToast('無法自動帶入耗材名稱，請確認採購編號是否正確或已在品項管理中建立', 'error');
+                     return;
+                 }
+
+
                 // Ensure category is selected or derived correctly
                 const category = DOM.categorySelect.value;
                  if (!category) {
@@ -1423,36 +1523,49 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 const purchaseDate = DOM.itemPurchaseDate.value;
                 const remarks = document.getElementById('item-remarks').value.trim();
 
+                // Find existing item directly from `allSupplies` state which is updated by onSnapshot
                 const existingItem = allSupplies.find(item => item.id === purchaseNumber);
 
                 try {
+                    const currentDate = new Date().toISOString().split('T')[0]; // Get current date for defaults
+                    const finalPurchaseDate = purchaseDate || currentDate; // Use provided date or default to today
+
                     if (existingItem) {
                         // Item exists, update it by adding stock
                         const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), purchaseNumber);
                         const newQuantity = existingItem.quantity + quantity;
-                        const historyEntry = { date: purchaseDate || new Date().toISOString().split('T')[0], quantity, type: 'restock' }; // Use current date if none provided
+                        const historyEntry = { date: finalPurchaseDate, quantity, type: 'restock' }; 
                         const updatedInboundHistory = [...(existingItem.inboundHistory || []), historyEntry];
-                        await updateDoc(itemRef, {
+                        
+                        // Prepare updates, only include remarks if new one is provided
+                        const updates = {
                             quantity: newQuantity,
-                            // Only update lastPurchaseDate if a new date is provided, otherwise keep the existing one or set initial if none
-                            lastPurchaseDate: purchaseDate || existingItem.lastPurchaseDate || new Date().toISOString().split('T')[0], 
-                            remarks: remarks || existingItem.remarks, // Keep existing remarks if new one is empty
+                            lastPurchaseDate: finalPurchaseDate, 
                             inboundHistory: updatedInboundHistory,
-                        });
+                        };
+                        if (remarks) {
+                            updates.remarks = remarks; // Update remarks only if new value exists
+                        } else if (existingItem.remarks === undefined || existingItem.remarks === null) {
+                             // Ensure remarks field exists even if empty, if it didn't before
+                            updates.remarks = "";
+                        }
+
+
+                        await updateDoc(itemRef, updates);
                         showToast(`已為 "${name}" 添加入庫 ${quantity} 件`);
                     } else {
                         // New item, create it
                          const newItem = {
-                            id: purchaseNumber,
+                            id: purchaseNumber, // Use purchase number as the document ID
                             purchaseNumber,
                             name,
                             category,
                             quantity,
-                            lastPurchaseDate: purchaseDate || new Date().toISOString().split('T')[0], // Use current date if none provided
-                            purchaseStatus: '',
+                            lastPurchaseDate: finalPurchaseDate, 
+                            purchaseStatus: '', // Default empty status
                             remarks: remarks,
-                            usageHistory: [],
-                            inboundHistory: [{ date: purchaseDate || new Date().toISOString().split('T')[0], quantity, type: 'initial_add' }], // Use current date if none provided
+                            usageHistory: [], // Initialize as empty array
+                            inboundHistory: [{ date: finalPurchaseDate, quantity, type: 'initial_add' }], 
                         };
                         const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), purchaseNumber);
                         await setDoc(itemRef, newItem);
@@ -1461,9 +1574,11 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
 
                     // Reset the form regardless of add/update
                     document.getElementById('add-item-form').reset();
-                    // Clear fields derived from lookup as well
+                    // Clear fields derived from lookup and disable category again
                      DOM.itemNameInput.value = '';
                      DOM.categorySelect.value = '';
+                     DOM.categorySelect.disabled = true;
+                     DOM.categorySelect.classList.add('bg-slate-50');
                      DOM.purchaseNumberFeedback.textContent = '';
 
 
