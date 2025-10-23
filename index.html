@@ -63,7 +63,7 @@
         .fade-in {
             animation: fadeIn 0.5s ease-out forwards;
         }
-        
+
         @keyframes toast-in {
             from { transform: translateY(100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
@@ -126,17 +126,17 @@
                     <input type="date" id="item-purchase-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
                 </div>
                 <div>
-                    <label for="item-quantity" class="block text-sm font-medium text-slate-600 mb-1">本次入庫數量</label> <!-- Changed Label -->
-                    <input type="number" id="item-quantity" value="1" min="1" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"> <!-- Changed min to 1 -->
+                    <label for="item-quantity" class="block text-sm font-medium text-slate-600 mb-1">目前庫存</label>
+                    <input type="number" id="item-quantity" value="1" min="0" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
                 </div>
                  <div>
-                    <label for="item-remarks" class="block text-sm font-medium text-slate-600 mb-1">備註 (此筆紀錄)</label> <!-- Changed Label -->
+                    <label for="item-remarks" class="block text-sm font-medium text-slate-600 mb-1">備註</label>
                     <textarea id="item-remarks" rows="1" placeholder="新增備註..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"></textarea>
                 </div>
                 <div class="md:col-span-2">
                     <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors btn-action flex items-center justify-center">
-                        <i data-lucide="plus" class="w-5 h-5 mr-2"></i> 新增此筆庫存紀錄
-                    </button> <!-- Changed Button Text -->
+                        <i data-lucide="plus" class="w-5 h-5 mr-2"></i> 新增至庫存
+                    </button>
                 </div>
             </form>
         </div>
@@ -188,7 +188,7 @@
         <!-- End New Log Section -->
 
     </div> <!-- This is the end of div.container -->
-    
+
     <!-- Modals -->
     <div id="mappings-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden opacity-0 z-50">
         <div class="modal-content bg-white w-full max-w-2xl p-6 rounded-2xl shadow-lg opacity-0 transform -translate-y-10">
@@ -217,7 +217,7 @@
                 </form>
             </div>
             <div id="mappings-list-container" class="max-h-80 overflow-y-auto space-y-4 pr-2 custom-scrollbar"></div>
-            
+
             <!-- New Log Section - REMOVED FROM HERE -->
 
         </div>
@@ -226,7 +226,7 @@
     <div id="add-stock-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden opacity-0 z-50">
          <div class="modal-content bg-white w-full max-w-md p-6 rounded-2xl shadow-lg opacity-0 transform -translate-y-10">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-slate-800">添加入庫紀錄 (增加現有項目數量)</h3> <!-- Changed Title -->
+                <h3 class="text-xl font-semibold text-slate-800">添加入庫紀錄</h3>
                 <button id="close-add-stock-modal-btn" class="text-slate-400 hover:text-slate-800"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <form id="add-stock-form" class="space-y-4">
@@ -235,7 +235,7 @@
                     <input type="date" id="add-stock-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
                 </div>
                 <div>
-                    <label for="add-stock-quantity" class="block text-sm font-medium text-slate-600 mb-1">添加入庫數量</label> <!-- Changed Label -->
+                    <label for="add-stock-quantity" class="block text-sm font-medium text-slate-600 mb-1">入庫數量</label>
                     <input type="number" id="add-stock-quantity" min="1" value="1" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
                 </div>
                 <div class="!mt-6">
@@ -248,28 +248,17 @@
     <div id="edit-item-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden opacity-0 z-50">
          <div class="modal-content bg-white w-full max-w-lg p-6 rounded-2xl shadow-lg opacity-0 transform -translate-y-10">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-slate-800">編輯此筆庫存項目</h3> <!-- Changed Title -->
+                <h3 class="text-xl font-semibold text-slate-800">編輯庫存項目</h3>
                 <button id="close-edit-modal-btn" class="text-slate-400 hover:text-slate-800"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <form id="edit-item-form" class="space-y-4">
-                 <!-- Added Name and Category (Readonly) -->
-                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-500 mb-1">耗材名稱</label>
-                        <p id="edit-item-name-display" class="font-semibold text-slate-800"></p>
-                    </div>
-                     <div>
-                        <label class="block text-sm font-medium text-slate-500 mb-1">採購編號</label>
-                        <p id="edit-purchase-number-display" class="font-semibold text-slate-800"></p>
-                    </div>
-                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label for="edit-last-purchase-date" class="block text-sm font-medium text-slate-600 mb-1">此筆入庫日期</label> <!-- Changed Label -->
+                        <label for="edit-last-purchase-date" class="block text-sm font-medium text-slate-600 mb-1">最近入庫日期</label>
                         <input type="date" id="edit-last-purchase-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
                     </div>
                     <div>
-                        <label for="edit-quantity" class="block text-sm font-medium text-slate-600 mb-1">此筆目前庫存</label> <!-- Changed Label -->
+                        <label for="edit-quantity" class="block text-sm font-medium text-slate-600 mb-1">總庫存</label>
                         <input type="number" id="edit-quantity" min="0" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
                     </div>
                      <div>
@@ -278,11 +267,11 @@
                     </div>
                 </div>
                 <div class="sm:col-span-2">
-                    <label for="edit-remarks" class="block text-sm font-medium text-slate-600 mb-1">備註 (此筆紀錄)</label> <!-- Changed Label -->
+                    <label for="edit-remarks" class="block text-sm font-medium text-slate-600 mb-1">備註</label>
                     <textarea id="edit-remarks" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition"></textarea>
                 </div>
                 <div class="!mt-6">
-                    <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2.5 px-4 rounded-lg hover:bg-green-700 transition-colors btn-action">更新此筆紀錄</button> <!-- Changed Button Text -->
+                    <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2.5 px-4 rounded-lg hover:bg-green-700 transition-colors btn-action">更新庫存</button>
                 </div>
             </form>
         </div>
@@ -305,15 +294,15 @@
 
     <!-- Toast Notification -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-[100]"></div>
-    
+
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
+        import {
             getFirestore, collection, onSnapshot, doc, getDocs,
             setDoc, updateDoc, deleteDoc, writeBatch, query, limit,
-            addDoc, orderBy // Added
+            addDoc, orderBy, increment // Added increment
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- CONSTANTS ---
@@ -326,40 +315,9 @@
             INK_LOW_STOCK_THRESHOLD: 2,
             OTHER_LOW_STOCK_THRESHOLD: 3,
         };
-        
-        // Corrected and embedded CSV data
-        const csvData = `品項,採購編號,耗材名稱,財編狀態,備註
-90薄布,94-618-PIFB2006050,"防水絹布(薄油畫布)60"" (切工36""+24"",50米)",,"2023/10/12廠商說防水絹布(薄油畫布)60"" 50m為期貨商品,之後改訂36"",廠商報價36“單價較44”便宜,所以44”的價錢會有問題(單價*吋數),之後若有叫修60""商品再詢問廠商(2024/02/26廠商說已無販售)"
-110薄布,94-618-PIFB2006050,"防水絹布(薄油畫布)60"" (切工44""+16"",50米)",,
-60薄布(停用),94-620-PIFB20024,"防水絹布(薄油畫布)24""(30米)",停用編號,
-90薄布(停用),94-620-PIFB20036,"防水絹布(薄油畫布)36""(30米)",停用編號,
-110薄布(停用),94-620-PIFB20044,"防水絹布(薄油畫布)44""(30米)",停用編號,
-90厚布,94-620-PIFO30036,藝術 防水霧面油畫布36吋 30米(台製),,
-110厚布,94-620-PIFO30044,藝術 防水霧面油畫布44吋 30米(台製),,
-60厚布(停用),,藝術 防水霧面油畫布24吋 30米(台製),停用編號,
-90海報紙(停用),94-620-PIBA11036,"防水INKJET海報紙110磅36""(45米)",停用編號,"2024/02/26廠商說海報紙110磅之後沒有36""(45米)的,都改為30米"
-110海報紙(停用),94-620-PIBA11044,"防水INKJET海報紙110磅44""(45米)",停用編號,"2024/02/26廠商說海報紙110磅之後沒有44""(45米)的,都改為30米,下次進貨規格更改為110磅42""(45米)廠商說單價一樣"
-90專用紙,94-620-S041225,"EPSON 9000 銅西紙36""*25M 台製<薄專用紙>",財產編號,(停用)銅西紙135磅36吋*30M(台製),銅西紙150P,2025/2/27起不會再進貨銅西紙
-90專用紙(新材編),94618PIBA17036,"防水噴墨厚卡海報紙170磅30米36""<台製170磅>",,"2025/5/2防水噴墨厚卡海報紙170磅30米36""舊料號94-618-PIBA17036,有料號94-620-PIBA170T36 36""X30m,防水噴墨厚卡海報紙170磅30米36"""
-110專用紙,94-620-S041224,"EPSON 9000 滾筒紙44""*25M 台製<薄專用紙>",,
-90銅板打樣紙,94-620-PIAA13536,防水噴墨銅版打樣紙135磅30米36吋,,
-90背膠亮面相紙,94-620-PIAF170T36,背膠超光亮面相紙170磅18米36吋,,
-90自黏白霧面,94-620-PID200ST36,防水PVC自黏白霧面200磅30米36吋(貼紙),,
-90原廠相紙,94-618-S041391,"EPSON 頂級光面相紙36""*30.5m S041391<原廠170磅>",,
-110原廠相紙,94-618-S041640,"EPSON 頂級光面相紙44""*30.5m S041640<原廠250磅>",,
-T8041亮光黑/PK,94-618-T804100,EPSON SCP9000亮光黑色墨水匣PK/700ML,,
-T8042藍色/C,94-618-T804200,EPSON SCP9000藍色墨水匣C/700ML,,
-T8043靚紅色/VM,94-618-T804300,EPSON SCP9000靚紅色墨水匣VM/700ML,,
-T8044黃色/Y,94-618-T804400,EPSON SCP9000黃色墨水匣Y/700ML,,
-T8045淡藍色/LC,94-618-T804500,EPSON SCP9000淡藍色墨水匣LC/700ML,,
-T8046淡靚紅色/VLM,94-618-T804600,EPSON SCP9000淡靚紅色墨水匣VLM/700ML,,
-T8047淡黑色/LK,94-618-T804700,EPSON SCP9000淡黑色墨水匣LK/700ML,,
-T8048消光黑/MK,94-618-T804800,EPSON SCP9000消光黑色墨水匣MK/700ML,,
-T8049超淡黑/LLK,94-618-T804900,EPSON SCP9000超淡黑色墨水匣LLK/700ML,,
-T804A橘色/OR,94-618-T804A00,EPSON SCP9000橘色墨水匣OR/700ML,,
-T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
-捲筒配接器,94-620-C811241,EPSON SCP9000捲筒配接器,,
-墨水收集槽,94-618-T699700,EPSON SCP9000廢墨盒,,`;
+
+        // Removed embedded CSV data
+        const csvData = ``; // Empty string
 
         // --- DOM Elements ---
         const DOM = {
@@ -403,9 +361,9 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
         let purchaseNumberMap = {};
         let editingKey = null;
         let currentView = localStorage.getItem(CONSTANTS.VIEW_MODE_KEY) || 'card';
-        let currentlyEditingItemId = null; // Will now store the unique Firestore ID
+        let currentlyEditingItemId = null;
         let mappingLogUnsubscribe = null; // New listener handle
-        
+
         const majorCategoryMap = {
              '90薄布': '滾筒布', '110薄布': '滾筒布', '60薄布(停用)': '滾筒布', '90薄布(停用)': '滾筒布', '110薄布(停用)': '滾筒布', '90厚布': '滾筒布', '110厚布': '滾筒布', '60厚布(停用)': '滾筒布',
             '90海報紙': '滾筒紙', '110海報紙': '滾筒紙', '90專用紙': '滾筒紙', '90專用紙(新材編)': '滾筒紙', '110專用紙': '滾筒紙', '90銅板打樣紙': '滾筒紙', '90背膠亮面相紙': '滾筒紙', '90自黏白霧面': '滾筒紙', '90原廠相紙': '滾筒紙', '110原廠相紙': '滾筒紙', '90海報紙(停用)': '滾筒紙', '110海報紙(停用)': '滾筒紙',
@@ -415,24 +373,32 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
 
         // --- Helper Functions ---
         function getAppId() {
-            // For GitHub deployment, use a fixed App ID. 
+            // For GitHub deployment, use a fixed App ID.
             // This ensures all users on your GitHub Pages site share the same database.
-            return 'epson9000-inventory-app-github'; 
+            return 'epson9000-inventory-app-github';
+        }
+
+		function getLocalDate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            const icon = type === 'success' 
-                ? `<i data-lucide="check-circle" class="w-5 h-5 text-green-500"></i>` 
+            const icon = type === 'success'
+                ? `<i data-lucide="check-circle" class="w-5 h-5 text-green-500"></i>`
                 : `<i data-lucide="x-circle" class="w-5 h-5 text-red-500"></i>`;
-            
+
             toast.className = `toast flex items-center gap-3 bg-white shadow-2xl rounded-lg py-3 px-4 mb-2 transition-transform duration-300`;
             toast.innerHTML = `${icon}<p class="font-semibold text-slate-700">${message}</p>`;
-            
+
             container.appendChild(toast);
             lucide.createIcons();
-            
+
             requestAnimationFrame(() => toast.classList.add('show'));
 
             setTimeout(() => {
@@ -440,56 +406,17 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 toast.addEventListener('animationend', () => toast.remove());
             }, 3000);
         }
-        
+
         // --- DATA LOADING AND PROCESSING ---
         function parseCsvLine(line) {
-            const result = [];
-            let current = '';
-            let inQuotes = false;
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                if (char === '"') {
-                    inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
-                    result.push(current.trim());
-                    current = '';
-                } else {
-                    current += char;
-                }
-            }
-            result.push(current.trim());
-            return result;
+            // Simplified as CSV data is removed, but kept structure in case needed later
+             return line.split(','); // Basic split, assuming no quotes needed now
         }
 
 
         function getInitialDataFromCSV() {
-            const lines = csvData.trim().split('\n').slice(1); // Skip header
-            const suppliesFromCsv = lines.map(line => {
-                if (!line.trim()) return null;
-                const [category, purchaseNumber, name, purchaseStatus, remarks] = parseCsvLine(line.trim());
-                
-                const cleanedPurchaseNumber = purchaseNumber.replace(/"/g, '').trim();
-                const cleanedName = name.replace(/"/g, '').trim();
-
-                if (!cleanedPurchaseNumber && !cleanedName) return null;
-
-                // **Generate a unique ID here for seeding**
-                const uniqueId = crypto.randomUUID(); 
-
-                return {
-                    id: uniqueId, // Use the generated unique ID
-                    purchaseNumber: cleanedPurchaseNumber || `manual-${cleanedName}`, // Keep purchase number as data
-                    name: cleanedName,
-                    category: category.replace(/"/g, '').trim(),
-                    purchaseStatus: purchaseStatus.replace(/"/g, '').trim(),
-                    remarks: remarks.replace(/"/g, '').trim(),
-                    quantity: 0,
-                    lastPurchaseDate: '',
-                    usageHistory: [],
-                    inboundHistory: [],
-                };
-            }).filter(Boolean);
-            return suppliesFromCsv;
+             // Return an empty array as CSV data is removed
+             return [];
         }
 
         // --- UI Rendering ---
@@ -503,24 +430,16 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
 
             mainListContainer.innerHTML = '';
             mainListContainer.className = 'space-y-8';
-            
-            // Sort supplies by name primarily, then maybe by purchase date or ID secondarily?
-            // Let's sort by name, then purchase number for grouping visual consistency
-            const sortedSupplies = [...allSupplies].sort((a, b) => {
-                const nameCompare = a.name.localeCompare(b.name, 'zh-Hant');
-                if (nameCompare !== 0) return nameCompare;
-                return (a.purchaseNumber || '').localeCompare(b.purchaseNumber || '', 'zh-Hant');
-            });
 
-            const activeItems = sortedSupplies.filter(item => !item.name.includes('(停用)') && !(item.purchaseStatus && item.purchaseStatus.includes('停用')));
-            const discontinuedItems = sortedSupplies.filter(item => item.name.includes('(停用)') || (item.purchaseStatus && item.purchaseStatus.includes('停用')));
+            const activeItems = allSupplies.filter(item => !item.name.includes('(停用)') && !(item.purchaseStatus && item.purchaseStatus.includes('停用')));
+            const discontinuedItems = allSupplies.filter(item => item.name.includes('(停用)') || (item.purchaseStatus && item.purchaseStatus.includes('停用')));
 
-             const groupedActiveItems = activeItems.reduce((acc, item) => {
-                 const majorCat = majorCategoryMap[item.category] || '其他';
-                 if (!acc[majorCat]) acc[majorCat] = [];
-                 acc[majorCat].push(item);
-                 return acc;
-             }, {});
+              const groupedActiveItems = activeItems.reduce((acc, item) => {
+                  const majorCat = majorCategoryMap[item.category] || '其他';
+                  if (!acc[majorCat]) acc[majorCat] = [];
+                  acc[majorCat].push(item);
+                  return acc;
+              }, {});
 
             const categoryOrder = ['滾筒布', '滾筒紙', '墨水匣', '其他'];
             const categoryIcons = { '滾筒布': 'layers', '滾筒紙': 'file-stack', '墨水匣': 'droplets', '其他': 'package' };
@@ -535,9 +454,9 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                                  <i data-lucide="${categoryIcons[majorCat] || 'package'}" class="w-5 h-5 mr-2 text-slate-500"></i>
                                  ${majorCat}
                              </h3>`;
-                         
+
                          const subListContainer = document.createElement('div');
-                         renderGroup(subListContainer, itemsInCategory); // Pass sorted items
+                         renderGroup(subListContainer, itemsInCategory);
                          groupContainer.appendChild(subListContainer);
                          mainListContainer.appendChild(groupContainer);
                      }
@@ -556,7 +475,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                     </h2>
                 `;
                 const discontinuedContainer = document.createElement('div');
-                renderGroup(discontinuedContainer, discontinuedItems); // Pass sorted discontinued items
+                renderGroup(discontinuedContainer, discontinuedItems);
                 discontinuedSection.appendChild(discontinuedContainer);
                 mainListContainer.appendChild(discontinuedSection);
             }
@@ -565,15 +484,15 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
         }
 
 
-        function renderGroup(container, items) { // Items are now pre-sorted
+        function renderGroup(container, items) {
             if (items.length === 0) return;
-            
-             if (currentView === 'card') {
+
+              if (currentView === 'card') {
                  container.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4';
-                 items.forEach(item => { // No need to sort again
+                 items.sort((a,b) => a.name.localeCompare(b.name, 'zh-Hant')).forEach(item => {
                      container.appendChild(createItemCard(item));
                  });
-             } else {
+              } else {
                  container.className = 'bg-white rounded-xl shadow-md overflow-hidden';
                  const tableHTML = `
                      <table class="w-full text-sm text-left text-slate-500 table-striped">
@@ -587,17 +506,17 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                              </tr>
                          </thead>
                          <tbody>
-                             ${items.map(createItemTableRow).join('')} <!-- No need to sort again -->
+                             ${items.sort((a,b) => a.name.localeCompare(b.name, 'zh-Hant')).map(createItemTableRow).join('')}
                          </tbody>
                      </table>`;
                  container.innerHTML = tableHTML;
                  addTableEventListeners(container);
-             }
+              }
         }
 
         function createItemCard(item) {
             const itemCard = document.createElement('div');
-            
+
             const isInk = (majorCategoryMap[item.category] || '其他') === '墨水匣';
             const threshold = isInk ? CONSTANTS.INK_LOW_STOCK_THRESHOLD : CONSTANTS.OTHER_LOW_STOCK_THRESHOLD;
             const isLowStock = item.quantity < threshold && item.quantity > 0;
@@ -613,18 +532,18 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
             } else if (isLowStock && !isDiscontinued) {
                 cardClasses += ' border-2 border-amber-400 ring-4 ring-amber-100/50';
             }
-            
+
             let purchaseAlertHtml = '';
             if (isZero && !isDiscontinued) {
                 purchaseAlertHtml = `<div class="mb-3 flex items-center p-2 rounded-md bg-red-100 text-red-800 text-sm font-bold">
-                            <i data-lucide="shopping-cart" class="w-5 h-5 mr-2"></i>
-                            <span>庫存已歸零 (建議庫存: ${threshold})</span>
-                        </div>`;
+                                     <i data-lucide="shopping-cart" class="w-5 h-5 mr-2"></i>
+                                     <span>庫存已歸零 (建議庫存: ${threshold})</span>
+                                 </div>`;
             } else if (isLowStock && !isDiscontinued) {
                  purchaseAlertHtml = `<div class="mb-3 flex items-center p-2 rounded-md bg-amber-100 text-amber-800 text-sm font-bold">
-                            <i data-lucide="alert-circle" class="w-5 h-5 mr-2"></i>
-                            <span>請盡快採購 (建議庫存: ${threshold})</span>
-                        </div>`;
+                                     <i data-lucide="alert-circle" class="w-5 h-5 mr-2"></i>
+                                     <span>請盡快採購 (建議庫存: ${threshold})</span>
+                                 </div>`;
             }
 
             const actionButtonsHtml = `
@@ -643,7 +562,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
             `;
 
             itemCard.className = cardClasses;
-            itemCard.dataset.itemId = item.id; // **Use the unique ID**
+            itemCard.dataset.itemId = item.id;
             itemCard.innerHTML = `
                 <div>
                     ${purchaseAlertHtml}
@@ -653,14 +572,14 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                     </div>
                     <div class="mt-2 space-y-1 text-xs text-slate-500">
                         <p>採購編號: <span class="font-medium text-slate-600">${item.purchaseNumber || 'N/A'}</span></p>
-                        <p>此筆入庫: <span class="font-medium text-slate-600">${item.lastPurchaseDate || '---'}</span></p> <!-- Changed Label -->
+                        <p>最近入庫: <span class="font-medium text-slate-600">${item.lastPurchaseDate || '---'}</span></p>
                         <p>財編狀態: <span class="font-medium text-slate-600">${item.purchaseStatus || 'N/A'}</span></p>
                         ${item.remarks ? `<p class="mt-2 pt-2 border-t border-slate-200">備註: <span class="font-normal text-slate-600 whitespace-pre-wrap">${item.remarks}</span></p>` : ''}
                     </div>
                 </div>
                 ${actionButtonsHtml}
                 `;
-            
+
             addCardEventListeners(itemCard, item);
             return itemCard;
         }
@@ -673,30 +592,27 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
             const isDiscontinued = item.name.includes('(停用)') || (item.purchaseStatus && item.purchaseStatus.includes('停用'));
 
             let rowClasses = 'border-b transition-colors';
-             if (isDiscontinued) {
+              if (isDiscontinued) {
                  rowClasses += ' row-disabled';
-             } else if (isZero) {
+              } else if (isZero) {
                 rowClasses += ' bg-red-50 hover:bg-red-100';
             } else if (isLowStock) {
                  rowClasses += ' bg-amber-50 hover:bg-amber-100';
             }
 
             let nameCellContent = `<div>${item.name || 'N/A'}</div>`;
-            // Add purchase date to table row for distinction
-            nameCellContent += `<div class="text-xs text-slate-400 mt-1">入庫: ${item.lastPurchaseDate || '---'}</div>`
-             if (item.remarks) {
-                 nameCellContent += `<div class="text-xs text-slate-500 mt-1 whitespace-pre-wrap">備註: ${item.remarks}</div>`;
-             }
+              if (item.remarks) {
+                 nameCellContent += `<div class="text-xs text-slate-500 mt-1 whitespace-pre-wrap">${item.remarks}</div>`;
+              }
             if (isZero && !isDiscontinued) {
                 nameCellContent = `<div>
                     <div class="flex items-center font-bold text-red-800"><i data-lucide="shopping-cart" class="w-4 h-4 mr-2"></i><span>${item.name || 'N/A'}</span></div>
-                    <div class="text-xs text-slate-400 mt-1">入庫: ${item.lastPurchaseDate || '---'}</div>
                     <div class="text-xs text-red-600 font-semibold mt-1">庫存已歸零 (建議庫存: ${threshold})</div>
                 </div>`;
             } else if (isLowStock && !isDiscontinued) {
                  nameCellContent += `<div class="text-xs text-amber-600 font-semibold flex items-center mt-1"><i data-lucide="alert-triangle" class="w-3 h-3 mr-1"></i>請盡快採購 (建議庫存: ${threshold})</div>`;
             }
-            
+
             const actionButtonsCell = `
                 <div class="flex items-center justify-center space-x-1">
                     <button data-action="unseal" class="btn-action bg-blue-100 text-blue-600 rounded-md h-7 px-3 flex items-center justify-center hover:bg-blue-200 text-xs font-semibold" ${item.quantity <= 0 ? 'disabled' : ''}>拆封</button>
@@ -708,7 +624,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
             `;
 
             return `
-                <tr class="${rowClasses}" data-item-id="${item.id}"> <!-- Use unique ID -->
+                <tr class="${rowClasses}" data-item-id="${item.id}">
                     <td class="px-4 py-3 font-medium">${nameCellContent}</td>
                     <td class="px-4 py-3">${item.purchaseNumber || 'N/A'}</td>
                     <td class="px-4 py-3">${item.purchaseStatus || 'N/A'}</td>
@@ -716,14 +632,13 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                     <td class="px-4 py-3 text-center">${actionButtonsCell}</td>
                 </tr>`;
         }
-        
+
         function renderUnsealHistory() {
             const historyList = DOM.unsealHistoryList;
             historyList.innerHTML = '';
-            
+
             const allHistory = allSupplies
-                // Include purchase date in history entry for context
-                .flatMap(item => (item.usageHistory || []).map(h => ({ ...h, name: item.name, category: item.category, itemId: item.id, itemPurchaseDate: item.lastPurchaseDate }))) 
+                .flatMap(item => (item.usageHistory || []).map(h => ({ ...h, name: item.name, category: item.category, itemId: item.id })))
                 .sort((a, b) => new Date(b.unsealedDate) - new Date(a.unsealedDate));
 
             if (allHistory.length > 0) {
@@ -735,12 +650,11 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                         <div class="flex-1">
                             <span class="font-semibold text-slate-800">${entry.name}</span>
                             <span class="text-xs text-slate-400 ml-2">(${majorCategoryMap[entry.category] || '其他'})</span>
-                            <span class="text-xs text-slate-400 ml-2">[入庫:${entry.itemPurchaseDate || 'N/A'}]</span> <!-- Show item purchase date -->
                         </div>
                         <div class="flex items-center gap-3">
                            <span class="text-xs font-mono bg-slate-100 text-slate-500 px-2 py-0.5 rounded">${entry.unsealedDate}</span>
                            <button data-item-id="${entry.itemId}" data-history-id="${entry.id}" class="delete-history-btn text-slate-400 hover:text-red-500" title="刪除此紀錄">
-                                <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
+                               <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
                            </button>
                         </div>
                     `;
@@ -751,79 +665,74 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 DOM.unsealHistorySection.style.display = 'none';
             }
         }
-        
+
         // --- Event Listener Helpers ---
         function addCardEventListeners(card, item) {
-            card.addEventListener('click', (e) => handleItemAction(e, item.id)); // Pass unique ID
+            card.addEventListener('click', (e) => handleItemAction(e, item));
         }
 
         function addTableEventListeners(table) {
             table.addEventListener('click', (e) => {
                 const row = e.target.closest('tr[data-item-id]');
                 if (row) {
-                    const itemId = row.dataset.itemId; // Get unique ID
-                    // No need to find item here, just pass the ID
-                    handleItemAction(e, itemId);
+                    const itemId = row.dataset.itemId;
+                    const item = allSupplies.find(s => s.id === itemId);
+                    if (item) handleItemAction(e, item);
                 }
             });
         }
-        
-        // **Modified to accept itemId instead of the full item object**
-        async function handleItemAction(e, itemId) { 
+
+        async function handleItemAction(e, item) {
             const button = e.target.closest('button[data-action]');
             if (!button || button.disabled) return;
             const action = button.dataset.action;
 
-            // Find the item from the current state using the unique ID
-            const item = allSupplies.find(s => s.id === itemId);
-            if (!item) {
-                console.error("Item not found for action:", itemId);
-                showToast("操作失敗，找不到項目", "error");
-                return;
-            }
-
-            const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), item.id); // Use unique ID
+            const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), item.id);
 
             switch (action) {
                 case 'increase':
-                    openAddStockModal(item); // Pass the found item object
+                    openAddStockModal(item);
                     break;
                 case 'decrease': {
                     const newQuantity = item.quantity - 1;
                     if (newQuantity < 0) return;
-                    showConfirmation('確認出庫', `確定要將 "${item.name}" (入庫日期: ${item.lastPurchaseDate || 'N/A'}) 的庫存減 1 嗎？`, async () => { // Added date context
-                        const today = new Date().toISOString().split('T')[0];
+                    showConfirmation('確認出庫', `確定要將 "${item.name}" 的庫存減 1 嗎？`, async () => {
+                        const today = getLocalDate();
                         const historyEntry = { id: crypto.randomUUID(), unsealedDate: today, type: 'manual_decrease' };
                         const updatedHistory = [...(item.usageHistory || []), historyEntry];
-                        await updateDoc(itemRef, { quantity: newQuantity, usageHistory: updatedHistory });
+                        await updateDoc(itemRef, {
+                                quantity: increment(-1),
+                                usageHistory: updatedHistory });
                         showToast('庫存已更新');
                     }, 'orange');
                     break;
                 }
                 case 'delete':
-                    showConfirmation('確認刪除', `您確定要永久刪除這筆 "${item.name}" (入庫日期: ${item.lastPurchaseDate || 'N/A'}) 的庫存紀錄嗎？`, async () => { // Added date context
+                    showConfirmation('確認刪除', `您確定要永久刪除 "${item.name}" 這筆紀錄嗎？`, async () => {
                         await deleteDoc(itemRef);
-                        showToast('此筆庫存紀錄已刪除');
+                        showToast('項目已刪除');
                     }, 'red');
                     break;
                 case 'edit':
-                    openEditModal(item); // Pass the found item object
+                    openEditModal(item);
                     break;
                 case 'unseal': {
                      const newQuantity = item.quantity - 1;
                     if (newQuantity < 0) return;
-                    showConfirmation('確認拆封', `確定要拆封一個 "${item.name}" (入庫日期: ${item.lastPurchaseDate || 'N/A'}) 嗎？此筆庫存將會減 1。`, async () => { // Added date context
-                        const today = new Date().toISOString().split('T')[0];
+                    showConfirmation('確認拆封', `確定要拆封一個 "${item.name}" 嗎？庫存將會減 1。`, async () => {
+                        const today = getLocalDate();
                         const historyEntry = { id: crypto.randomUUID(), unsealedDate: today, type: 'unseal' };
                         const updatedHistory = [...(item.usageHistory || []), historyEntry];
-                        await updateDoc(itemRef, { quantity: newQuantity, usageHistory: updatedHistory });
-                        showToast('庫存已更新，已記錄拆封');
+                        await updateDoc(itemRef, {
+                                quantity: increment(-1),
+                                usageHistory: updatedHistory });
+                        showToast('庫存已更新');
                     }, 'blue');
                     break;
                 }
             }
         }
-        
+
         // --- Modal & Confirmation Logic ---
         function openModal(modal) {
             modal.classList.remove('hidden');
@@ -842,10 +751,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                     if (editingKey) cancelEditMode();
                     // Stop listening to logs when modal closes - REMOVED
                 }
-                 // Reset currentlyEditingItemId when closing relevant modals
-                if (modal === DOM.addStockModal || modal === DOM.editItemModal) {
-                    currentlyEditingItemId = null; 
-                }
+                if (modal === DOM.addStockModal || modal === DOM.editItemModal) currentlyEditingItemId = null;
             }, 300);
         }
 
@@ -853,7 +759,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
             const modal = DOM.confirmationModal;
             const confirmBtn = modal.querySelector('#confirm-btn');
             const iconContainer = modal.querySelector('#confirmation-icon');
-            
+
             const typeMap = {
                 red: { btn: 'bg-red-600 hover:bg-red-700', icon: 'bg-red-100', iconContent: `<i data-lucide="alert-triangle" class="h-6 w-6 text-red-600"></i>` },
                 blue: { btn: 'bg-blue-600 hover:bg-blue-700', icon: 'bg-blue-100', iconContent: `<i data-lucide="info" class="h-6 w-6 text-blue-600"></i>` },
@@ -862,17 +768,17 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
 
             modal.querySelector('#confirmation-title').textContent = title;
             modal.querySelector('#confirmation-message').textContent = message;
-            
+
             confirmBtn.className = `w-full text-white font-semibold py-2 px-4 rounded-lg transition-colors ${typeMap[type].btn}`;
             iconContainer.className = `mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4 ${typeMap[type].icon}`;
             iconContainer.innerHTML = typeMap[type].iconContent;
             lucide.createIcons();
-            
+
             const newConfirmHandler = () => {
                 onConfirm();
                 closeModal(modal);
             };
-            
+
             const newCancelHandler = () => {
                 closeModal(modal);
             };
@@ -885,31 +791,15 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
             const cancelBtnClone = cancelBtn.cloneNode(true);
             cancelBtn.parentNode.replaceChild(cancelBtnClone, cancelBtn);
             cancelBtnClone.addEventListener('click', newCancelHandler, { once: true });
-            
+
             openModal(modal);
         }
 
         // --- Mappings and Category Logic ---
         function initializeAndLoadMappings() {
-            // 1. Parse CSV data first to get base mappings
-            const csvBasedMappings = {};
-            const lines = csvData.trim().split('\n').slice(1); // Skip header
-            lines.forEach(line => {
-                if (!line.trim()) return;
-                const [category, purchaseNumber, name] = parseCsvLine(line.trim());
-                const cleanedPurchaseNumber = purchaseNumber.replace(/"/g, '').trim();
-                const cleanedName = name.replace(/"/g, '').trim();
-                const cleanedCategory = category.replace(/"/g, '').trim();
-
-                if (cleanedPurchaseNumber) { // Only add if there's a purchase number
-                    csvBasedMappings[cleanedPurchaseNumber] = { name: cleanedName, category: cleanedCategory };
-                } else if (cleanedName) {
-                    // Handle items with name but no number if needed, maybe using manual key?
-                    // For consistency with seeding, let's keep the manual key logic
-                    const manualKey = `manual-${cleanedName}`;
-                    csvBasedMappings[manualKey] = { name: cleanedName, category: cleanedCategory };
-                }
-            });
+            // 1. Parse CSV data first to get base mappings (Now returns empty)
+            const csvBasedMappings = {}; // Starts empty
+             // Removed CSV parsing logic
 
             // 2. Listen to Firestore for updates
             const mappingsRef = collection(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION));
@@ -918,25 +808,25 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 snapshot.forEach(doc => {
                     firestoreMappings[doc.id] = doc.data();
                 });
-                // 3. Merge Firestore data over CSV defaults
-                purchaseNumberMap = { ...csvBasedMappings, ...firestoreMappings };
+                // 3. Merge Firestore data over CSV defaults (which is empty)
+                purchaseNumberMap = { ...csvBasedMappings, ...firestoreMappings }; // Effectively just Firestore data
                 renderMappingsList();
                 populateCategorySelects();
             }, (error) => {
                  console.error("讀取品項對照表時發生錯誤:", error);
                  showToast('讀取品項對照表失敗', 'error');
-                 // Initialize with CSV data even if Firestore fails initially
+                 // Initialize with empty map if Firestore fails initially and map is empty
                  if (Object.keys(purchaseNumberMap).length === 0) { // Check if map wasn't already populated
-                     purchaseNumberMap = { ...csvBasedMappings };
+                     purchaseNumberMap = { ...csvBasedMappings }; // Initialize as empty
                      renderMappingsList();
                      populateCategorySelects();
                  }
             });
         }
-        
+
         function renderMappingsList() {
             DOM.mappingsListContainer.innerHTML = '';
-            
+
             const container = document.createElement('div');
             container.innerHTML = '<h4 class="font-semibold text-slate-700 mb-2">品項對照表</h4>';
             const list = document.createElement('div');
@@ -975,13 +865,13 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                         div.classList.add('bg-indigo-100', 'ring-2', 'ring-indigo-500'); // Highlight it
                     }
                 });
-                
+
                 // After loop, scroll if element was found
                 if (elementToScrollTo) {
                     elementToScrollTo.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     // Clear the flag
                     window.lastEditedMappingKey = null;
-                    
+
                     // Remove highlight after a delay
                     setTimeout(() => {
                         elementToScrollTo.classList.remove('bg-indigo-100', 'ring-2', 'ring-indigo-500');
@@ -1067,17 +957,17 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
             const customCategoriesRef = collection(db, getCollectionPath(CONSTANTS.CUSTOM_CATEGORIES_COLLECTION));
             const snapshot = await getDocs(customCategoriesRef);
             const customCategories = snapshot.docs.map(doc => doc.id);
-            // Derive categories also from the *current* purchaseNumberMap which includes CSV + Firestore
-            const allCategories = [...new Set(Object.values(purchaseNumberMap).map(item => item.category))]; 
+            // Derive categories also from the *current* purchaseNumberMap which includes Firestore only now
+            const allCategories = [...new Set(Object.values(purchaseNumberMap).map(item => item.category))];
             const finalCategories = [...new Set([...allCategories, ...customCategories])].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
-            
+
             const selects = [DOM.categorySelect, DOM.newItemCategorySelect];
             selects.forEach(select => {
                 const currentVal = select.value;
                 const placeholder = select.querySelector('option[disabled]');
                 select.innerHTML = '';
                 if(placeholder) select.appendChild(placeholder);
-                
+
                 finalCategories.forEach(categoryName => {
                     const option = document.createElement('option');
                     option.value = categoryName;
@@ -1107,7 +997,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                       // Re-sort options? Optional, might be complex if done frequently
                  }
             });
-            
+
             if (selectAfterAdding) {
                 // Ensure the category select is enabled before setting the value
                 DOM.categorySelect.disabled = false;
@@ -1124,20 +1014,16 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
 
 
         // --- Update/Delete/Edit Functions ---
-        
-        function openAddStockModal(item) { // item is the full object
-            currentlyEditingItemId = item.id; // Store unique ID
+
+        function openAddStockModal(item) {
+            currentlyEditingItemId = item.id;
             DOM.addStockForm.reset();
-            DOM.addStockForm['add-stock-date'].value = new Date().toISOString().split('T')[0];
+            DOM.addStockForm['add-stock-date'].value = getLocalDate();
             openModal(DOM.addStockModal);
         }
 
-        function openEditModal(item) { // item is the full object
-            currentlyEditingItemId = item.id; // Store unique ID
-            // Populate display fields (readonly)
-             document.getElementById('edit-item-name-display').textContent = item.name || 'N/A';
-             document.getElementById('edit-purchase-number-display').textContent = item.purchaseNumber || 'N/A';
-            // Populate editable fields
+        function openEditModal(item) {
+            currentlyEditingItemId = item.id;
             DOM.editItemForm['edit-last-purchase-date'].value = item.lastPurchaseDate || '';
             DOM.editItemForm['edit-quantity'].value = item.quantity;
             DOM.editItemForm['edit-purchase-status'].value = item.purchaseStatus || '';
@@ -1148,9 +1034,9 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
         async function setupAddStockFormListener() {
             DOM.addStockForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                if (!currentlyEditingItemId) return; // Should have the unique ID
-                
-                const date = DOM.addStockForm['add-stock-date'].value || new Date().toISOString().split('T')[0];
+                if (!currentlyEditingItemId) return;
+
+                const date = DOM.addStockForm['add-stock-date'].value || getLocalDate();
                 const quantity = parseInt(DOM.addStockForm['add-stock-quantity'].value, 10);
 
                 if (isNaN(quantity) || quantity <= 0) {
@@ -1158,34 +1044,30 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                     return;
                 }
 
-                const item = allSupplies.find(s => s.id === currentlyEditingItemId); // Find item by unique ID
+                const item = allSupplies.find(s => s.id === currentlyEditingItemId);
                 if (item) {
-                    const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), item.id); // Use unique ID
-                    const newQuantity = item.quantity + quantity;
+                    const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), item.id);
+                    const newQuantity = item.quantity + quantity; // Not used for update, just for logic/history
                     const historyEntry = { date, quantity, type: 'restock' };
                     const updatedHistory = [...(item.inboundHistory || []), historyEntry];
 
                     await updateDoc(itemRef, {
-                        quantity: newQuantity,
-                        // Update lastPurchaseDate only if this new date is later? Or always update? Let's always update for simplicity.
-                        lastPurchaseDate: date, 
+                        quantity: increment(quantity), // Use increment here
+                        lastPurchaseDate: date,
                         inboundHistory: updatedHistory
                     });
-                    
+
                     closeModal(DOM.addStockModal);
                     showToast('入庫成功');
-                } else {
-                     console.error("Item not found for adding stock:", currentlyEditingItemId);
-                     showToast("操作失敗，找不到項目", "error");
                 }
             });
         }
-        
+
         async function setupEditFormListener() {
             DOM.editItemForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                if (!currentlyEditingItemId) return; // Should have unique ID
-                
+                if (!currentlyEditingItemId) return;
+
                 const newLastPurchaseDate = DOM.editItemForm['edit-last-purchase-date'].value;
                 const newQuantity = parseInt(DOM.editItemForm['edit-quantity'].value, 10);
                 const newPurchaseStatus = DOM.editItemForm['edit-purchase-status'].value.trim();
@@ -1197,34 +1079,34 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                     return;
                 }
 
-                const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), currentlyEditingItemId); // Use unique ID
+                const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), currentlyEditingItemId);
                 await updateDoc(itemRef, {
-                    quantity: newQuantity,
-                    lastPurchaseDate: newLastPurchaseDate, // Update the date associated with this specific entry
+                    quantity: newQuantity, // Direct set for edit
+                    lastPurchaseDate: newLastPurchaseDate,
                     purchaseStatus: newPurchaseStatus,
                     remarks: newRemarks
                 });
-                
+
                 closeModal(DOM.editItemModal);
-                showToast('此筆庫存紀錄更新成功');
+                showToast('庫存項目更新成功');
             });
         }
-        
+
         // --- Unseal History Deletion ---
         function setupUnsealHistoryListener() {
             DOM.unsealHistoryList.addEventListener('click', e => {
                 const deleteBtn = e.target.closest('.delete-history-btn');
                 if (!deleteBtn) return;
 
-                const { itemId, historyId } = deleteBtn.dataset; // itemId is the unique ID
-                const item = allSupplies.find(s => s.id === itemId); // Find by unique ID
+                const { itemId, historyId } = deleteBtn.dataset;
+                const item = allSupplies.find(s => s.id === itemId);
 
                 if (!item) {
                     console.error("找不到對應的項目來刪除紀錄");
                     showToast('操作失敗，找不到項目', 'error');
                     return;
                 }
-                
+
                 // Find the specific history entry
                 const historyEntry = (item.usageHistory || []).find(h => h.id === historyId);
                 if (!historyEntry) {
@@ -1234,14 +1116,13 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 }
 
 
-                showConfirmation('確認刪除紀錄', `您確定要刪除這筆 "${item.name}" (入庫日期: ${item.lastPurchaseDate || 'N/A'}) 的拆封紀錄嗎？此筆庫存將會加回 1。`, async () => {
-                    const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), itemId); // Use unique ID
-                    const newQuantity = item.quantity + 1;
+                showConfirmation('確認刪除紀錄', `您確定要刪除這筆 "${item.name}" 的拆封紀錄嗎？庫存將會加回 1。`, async () => {
+                    const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), itemId);
                     const newUsageHistory = (item.usageHistory || []).filter(h => h.id !== historyId);
 
                     try {
                         await updateDoc(itemRef, {
-                            quantity: newQuantity,
+                            quantity: increment(1),
                             usageHistory: newUsageHistory,
                         });
                         showToast('拆封紀錄已刪除');
@@ -1259,12 +1140,12 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
             localStorage.setItem(CONSTANTS.VIEW_MODE_KEY, view);
             const cardBtn = DOM.viewToggle.querySelector('[data-view="card"]');
             const tableBtn = DOM.viewToggle.querySelector('[data-view="table"]');
-            
+
             cardBtn.classList.toggle('bg-white', view === 'card');
             cardBtn.classList.toggle('shadow-sm', view === 'card');
             cardBtn.classList.toggle('text-indigo-600', view === 'card');
             cardBtn.classList.toggle('text-slate-500', view !== 'card');
-            
+
             tableBtn.classList.toggle('bg-white', view === 'table');
             tableBtn.classList.toggle('shadow-sm', view === 'table');
             tableBtn.classList.toggle('text-indigo-600', view === 'table');
@@ -1273,7 +1154,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
 
         function downloadCSV() {
             const headers = [
-                "採購編號", "耗材名稱", "品項", "此筆庫存量", "此筆入庫日期", // Changed Header
+                "採購編號", "耗材名稱", "品項", "庫存量", "最近入庫日期",
                 "財編狀態", "備註",
                 "入庫紀錄", "拆封紀錄"
             ];
@@ -1283,25 +1164,25 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 return `"${str}"`;
             };
 
-            const rows = allSupplies.map(item => { // Now iterates through individual entries
+            const rows = allSupplies.map(item => {
                 const inboundHistory = (item.inboundHistory || [])
                     .map(h => `${h.date}: ${h.quantity}件`)
                     .join('; ');
                 // Make sure to extract the date from usageHistory
                 const usageHistory = (item.usageHistory || [])
-                    .map(h => h.unsealedDate) 
+                    .map(h => h.unsealedDate)
                     .join('; ');
-                
+
                 return [
                     sanitizeField(item.purchaseNumber),
                     sanitizeField(item.name),
                     sanitizeField(item.category),
-                    item.quantity, // Quantity of this specific entry
-                    sanitizeField(item.lastPurchaseDate), // Date of this specific entry
+                    item.quantity,
+                    sanitizeField(item.lastPurchaseDate),
                     sanitizeField(item.purchaseStatus),
                     sanitizeField(item.remarks),
-                    sanitizeField(inboundHistory), // This might need refinement if history is per-entry now
-                    sanitizeField(usageHistory)  // This might need refinement if history is per-entry now
+                    sanitizeField(inboundHistory),
+                    sanitizeField(usageHistory)
                 ].join(',');
             });
 
@@ -1310,7 +1191,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
             link.setAttribute("href", url);
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDate(); // Use local date for filename
             link.setAttribute("download", `庫存報表_${today}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
@@ -1323,14 +1204,14 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
         function getCollectionPath(collectionName) {
             const appId = getAppId();
             // Using a public path suitable for shared access on GitHub Pages
-            return `artifacts/${appId}/public/data/${collectionName}`; 
+            return `artifacts/${appId}/public/data/${collectionName}`;
         }
 
         async function addMappingLog(actionMessage) {
             try {
                 const logsRef = collection(db, getCollectionPath(CONSTANTS.MAPPING_LOGS_COLLECTION));
                 await addDoc(logsRef, {
-                    timestamp: new Date().toISOString(),
+                    timestamp: new Date().toISOString(), // Keep ISO for server-side sorting consistency
                     action: actionMessage,
                     user: userId || 'anonymous' // Use the signed-in user ID
                 });
@@ -1345,22 +1226,19 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
             const q = query(suppliesRef, limit(1));
             const snapshot = await getDocs(q);
 
+            // Since CSV data is removed, this function will now only check if DB is empty
+            // and skip seeding, which is intended.
             if (snapshot.empty) {
-                console.log("資料庫是空的，正在從CSV植入初始資料...");
-                const initialSupplies = getInitialDataFromCSV();
-                const batch = writeBatch(db);
-                initialSupplies.forEach(item => {
-                    // **Use the unique ID generated in getInitialDataFromCSV**
-                    const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), item.id); 
-                    batch.set(itemRef, item);
-                });
-                await batch.commit();
-                console.log("初始資料植入完成。");
+                console.log("資料庫是空的，沒有初始資料可植入。");
+                // const initialSupplies = getInitialDataFromCSV(); // This is now []
+                // if (initialSupplies.length > 0) { // This condition will be false
+                //    ... batch write logic ...
+                // }
             } else {
                 console.log("資料庫已有資料，跳過植入步驟。");
             }
         }
-        
+
         // --- Main Initialization ---
         async function main() {
             // --- Firebase Setup ---
@@ -1375,7 +1253,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                     appId: "1:681687390935:web:563c063abd00054fc06e92"
                 };
                 /* ------------------------------------ */
-                
+
                 if (!firebaseConfig.apiKey.startsWith("AIza")) {
                     DOM.loadingState.innerHTML = `<p class="text-red-500">錯誤：請在程式碼中填入您的 Firebase 設定碼。</p>`;
                     return;
@@ -1384,38 +1262,38 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                
+
                 await signInAnonymously(auth);
 
                 userId = auth.currentUser.uid;
-                
-                await seedInitialData();
+
+                await seedInitialData(); // Will now just check and likely skip
 
             } catch (error) {
                 console.error("Firebase 初始化失敗:", error);
                 if (error.code === 'auth/configuration-not-found') {
                     DOM.loadingState.innerHTML = `<div class="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-lg text-left max-w-2xl mx-auto">
-                                                <div class="flex items-center">
-                                                    <div class="flex-shrink-0">
-                                                        <i data-lucide="alert-triangle" class="h-6 w-6 text-amber-600"></i>
-                                                    </div>
-                                                    <div class="ml-4">
-                                                        <h3 class="text-lg font-bold text-amber-800">需要一個重要設定！</h3>
-                                                        <p class="text-slate-700 mt-2">您的 Firebase 專案尚未啟用「匿名登入」，這是讓應用程式連接資料庫的必要步驟。</p>
-                                                    </div>
-                                                </div>
-                                                <div class="mt-4">
-                                                    <p class="text-slate-600 font-semibold">請依照以下步驟完成設定：</p>
-                                                    <ol class="list-decimal list-inside text-slate-600 space-y-2 mt-2 pl-2">
-                                                        <li>點擊此連結前往您的 Firebase 專案：<a href="https://console.firebase.google.com/" target="_blank" class="font-semibold text-blue-600 underline hover:text-blue-800">Firebase 控制台</a>。</li>
-                                                        <li>在左側選單中，找到並點擊「<b>Authentication</b>」。</li>
-                                                        <li>進入 Authentication 後，點擊上方的「<b>Sign-in method</b>」分頁。</li>
-                                                        <li>在服務商列表中找到「<b>匿名</b>」，點擊它並將開關設定為「<b>啟用</b>」，然後儲存。</li>
-                                                        <li>完成後，回到此頁面並<b>重新整理</b>。</li>
-                                                    </ol>
-                                                    <p class="mt-4 text-xs text-slate-500">這不是程式碼的錯誤，而是一個必須在 Firebase 網站上完成的專案設定。</p>
-                                                </div>
-                                            </div>`;
+                                                 <div class="flex items-center">
+                                                     <div class="flex-shrink-0">
+                                                         <i data-lucide="alert-triangle" class="h-6 w-6 text-amber-600"></i>
+                                                     </div>
+                                                     <div class="ml-4">
+                                                         <h3 class="text-lg font-bold text-amber-800">需要一個重要設定！</h3>
+                                                         <p class="text-slate-700 mt-2">您的 Firebase 專案尚未啟用「匿名登入」，這是讓應用程式連接資料庫的必要步驟。</p>
+                                                     </div>
+                                                 </div>
+                                                 <div class="mt-4">
+                                                     <p class="text-slate-600 font-semibold">請依照以下步驟完成設定：</p>
+                                                     <ol class="list-decimal list-inside text-slate-600 space-y-2 mt-2 pl-2">
+                                                         <li>點擊此連結前往您的 Firebase 專案：<a href="https://console.firebase.google.com/" target="_blank" class="font-semibold text-blue-600 underline hover:text-blue-800">Firebase 控制台</a>。</li>
+                                                         <li>在左側選單中，找到並點擊「<b>Authentication</b>」。</li>
+                                                         <li>進入 Authentication 後，點擊上方的「<b>Sign-in method</b>」分頁。</li>
+                                                         <li>在服務商列表中找到「<b>匿名</b>」，點擊它並將開關設定為「<b>啟用</b>」，然後儲存。</li>
+                                                         <li>完成後，回到此頁面並<b>重新整理</b>。</li>
+                                                     </ol>
+                                                     <p class="mt-4 text-xs text-slate-500">這不是程式碼的錯誤，而是一個必須在 Firebase 網站上完成的專案設定。</p>
+                                                 </div>
+                                             </div>`;
                     lucide.createIcons();
                 } else {
                     DOM.loadingState.innerHTML = `<p class="text-red-500">錯誤：無法連接到資料庫。請確認 Firebase 設定是否正確。</p>`;
@@ -1426,11 +1304,11 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
             // --- UI and Listeners Setup ---
             setView(currentView);
             lucide.createIcons();
-            
+
             // Listen for real-time updates
             const suppliesQuery = collection(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION));
             onSnapshot(suppliesQuery, (snapshot) => {
-                allSupplies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // Store unique ID from Firestore
+                allSupplies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderInventory();
                 renderUnsealHistory();
             }, (error) => {
@@ -1440,9 +1318,9 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 DOM.inventoryList.innerHTML = `<p class="text-red-500 text-center">無法載入庫存資料。</p>`;
             });
 
-            initializeAndLoadMappings(); // This now loads CSV defaults first, then listens for Firestore
+            initializeAndLoadMappings(); // This now loads Firestore mappings
             listenToMappingLogs(); // Listen to logs on page load
-            
+
             // --- EVENT LISTENERS ---
             DOM.viewToggle.addEventListener('click', (e) => {
                 const button = e.target.closest('button');
@@ -1458,23 +1336,23 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 // No need to start log listener here anymore
             });
             DOM.closeMappingsModalBtn.addEventListener('click', () => closeModal(DOM.mappingsModal));
-            DOM.mappingsModal.addEventListener('click', (e) => { 
-                if (e.target === DOM.mappingsModal) closeModal(DOM.mappingsModal); 
+            DOM.mappingsModal.addEventListener('click', (e) => {
+                if (e.target === DOM.mappingsModal) closeModal(DOM.mappingsModal);
             });
-            
+
             DOM.closeAddStockModalBtn.addEventListener('click', () => closeModal(DOM.addStockModal));
             DOM.addStockModal.addEventListener('click', (e) => { if (e.target === DOM.addStockModal) closeModal(DOM.addStockModal); });
 
             DOM.closeEditModalBtn.addEventListener('click', () => closeModal(DOM.editItemModal));
             DOM.editItemModal.addEventListener('click', (e) => { if (e.target === DOM.editItemModal) closeModal(DOM.editItemModal); });
-            
+
             DOM.addCategoryBtn.addEventListener('click', async () => {
                 const newCategory = prompt('請輸入新的耗材類別(品項)名稱：');
                 if (newCategory && newCategory.trim() !== '') {
                     const trimmedCategory = newCategory.trim();
                     await saveCustomCategory(trimmedCategory);
                      // Set the newly added category in the dropdown in the mapping modal
-                     DOM.newItemCategorySelect.value = trimmedCategory; 
+                     DOM.newItemCategorySelect.value = trimmedCategory;
                     showToast(`類別 "${trimmedCategory}" 已新增`);
                 }
             });
@@ -1488,7 +1366,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
 
                 resultsContainer.innerHTML = '';
                 feedbackEl.textContent = '';
-                
+
                  // Clear derived fields when input changes
                  DOM.itemNameInput.value = '';
                  DOM.categorySelect.value = '';
@@ -1503,7 +1381,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 const results = Object.entries(purchaseNumberMap).filter(([key, value]) => {
                     // Make sure value exists and has properties before accessing them
                     return value && (
-                         key.toLowerCase().includes(searchTerm) || 
+                         key.toLowerCase().includes(searchTerm) ||
                          (value.name && value.name.toLowerCase().includes(searchTerm)) ||
                          (value.category && value.category.toLowerCase().includes(searchTerm))
                     );
@@ -1530,7 +1408,7 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 if (resultEl) {
                     const key = resultEl.dataset.key;
                     const item = purchaseNumberMap[key];
-                    
+
                     if (item) { // Ensure item exists in the map
                         DOM.purchaseNumberInput.value = key;
                         DOM.itemNameInput.value = item.name;
@@ -1561,15 +1439,15 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                      showToast('請填寫所有欄位', 'error');
                      return;
                  }
-                
+
                 // Prevent overwriting if not in edit mode and key already exists? Optional.
                 // if (!editingKey && purchaseNumberMap[number]) {
                 //     showToast(`採購編號 "${number}" 已存在`, 'error');
                 //     return;
                 // }
 
-                const oldData = (editingKey && purchaseNumberMap[editingKey]) ? 
-                                ` (原: ${purchaseNumberMap[editingKey].name}, ${purchaseNumberMap[editingKey].category})` : '';
+                const oldData = (editingKey && purchaseNumberMap[editingKey]) ?
+                         ` (原: ${purchaseNumberMap[editingKey].name}, ${purchaseNumberMap[editingKey].category})` : '';
 
                 if (editingKey && editingKey !== number) {
                      // If the key (purchase number) is changed during edit, delete the old one first
@@ -1619,29 +1497,29 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                     const key = deleteButton.dataset.key;
                     const item = purchaseNumberMap[key]; // Get item details before deleting
                     const itemDetails = item ? `(${item.name}, ${item.category})` : '';
-                         showConfirmation(
-                             '確認刪除',
-                             `您確定要刪除品項 "${key}" 嗎？這不會刪除已存在的庫存項目，只會從對照表中移除。`, // Clarify deletion scope
-                             async () => {
-                                 const docRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), key);
-                                 try {
-                                     await deleteDoc(docRef);
-                                     // Log delete
-                                     await addMappingLog(`刪除品項: ${key} ${itemDetails}`);
-                                     showToast('品項已刪除');
-                                     // If the deleted item was being edited, cancel edit mode
-                                     if (editingKey === key) {
-                                         cancelEditMode();
-                                     }
-                                 } catch (error) {
-                                     console.error("刪除品項對照時發生錯誤:", error);
-                                     showToast('刪除品項失敗', 'error');
-                                 }
-                             }
-                         );
+                           showConfirmation(
+                                '確認刪除',
+                                `您確定要刪除品項 "${key}" 嗎？這不會刪除已存在的庫存項目，只會從對照表中移除。`, // Clarify deletion scope
+                                async () => {
+                                    const docRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), key);
+                                    try {
+                                        await deleteDoc(docRef);
+                                        // Log delete
+                                        await addMappingLog(`刪除品項: ${key} ${itemDetails}`);
+                                        showToast('品項已刪除');
+                                        // If the deleted item was being edited, cancel edit mode
+                                        if (editingKey === key) {
+                                            cancelEditMode();
+                                        }
+                                    } catch (error) {
+                                        console.error("刪除品項對照時發生錯誤:", error);
+                                        showToast('刪除品項失敗', 'error');
+                                    }
+                                }
+                           );
                 }
             });
-            
+
             // This function is defined below in setup file
             setupFormListener();
             setupAddStockFormListener();
@@ -1677,9 +1555,8 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
 
                 const quantityInput = document.getElementById('item-quantity');
                 const quantity = parseInt(quantityInput.value, 10);
-                 // **Allow 0 quantity for adding an entry without initial stock? Let's require at least 1 for initial add.**
-                 if (isNaN(quantity) || quantity <= 0) { 
-                     showToast('請輸入有效的入庫數量 (必須是正整數)', 'error'); // Changed message
+                 if (isNaN(quantity) || quantity < 0) {
+                     showToast('請輸入有效的庫存數量 (必須是非負整數)', 'error');
                      quantityInput.focus(); // Highlight the input field
                      return;
                  }
@@ -1688,32 +1565,50 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
                 const purchaseDate = DOM.itemPurchaseDate.value;
                 const remarks = document.getElementById('item-remarks').value.trim();
 
-                // **CHANGE: Always add a new item**
+                // Find existing item directly from `allSupplies` state which is updated by onSnapshot
+                const existingItem = allSupplies.find(item => item.id === purchaseNumber);
+
                 try {
-                    const currentDate = new Date().toISOString().split('T')[0]; // Get current date for defaults
-                    const finalPurchaseDate = purchaseDate || currentDate; // Use provided date or default to today
-                    const uniqueItemId = crypto.randomUUID(); // Generate unique ID for this new entry
+                    const finalPurchaseDate = purchaseDate || getLocalDate(); // Use provided date or default to today
 
-                    // Create the new item object
-                    const newItem = {
-                        id: uniqueItemId, // Store the unique ID within the document as well
-                        purchaseNumber,
-                        name,
-                        category,
-                        quantity,
-                        lastPurchaseDate: finalPurchaseDate, // Represents the date this specific batch was added
-                        purchaseStatus: '', // Default empty status for new entries
-                        remarks: remarks, // Remarks specific to this entry/batch
-                        usageHistory: [], // Initialize as empty array
-                        inboundHistory: [{ date: finalPurchaseDate, quantity, type: 'initial_add' }], 
-                    };
+                    if (existingItem) {
+                        // Item exists, update it by adding stock
+                        const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), purchaseNumber);
+                        const newQuantity = existingItem.quantity + quantity; // Not used for update, just for logic/history
+                        const historyEntry = { date: finalPurchaseDate, quantity, type: 'restock' };
+                        const updatedInboundHistory = [...(existingItem.inboundHistory || []), historyEntry];
 
-                    // Use setDoc with the unique ID
-                    const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), uniqueItemId);
-                    await setDoc(itemRef, newItem);
-                    showToast(`"${name}" (入庫日期: ${finalPurchaseDate}) 已成功新增至庫存`);
+                        // Prepare updates, always update remarks field
+                        const updates = {
+                            quantity: increment(quantity), // Use increment
+                            lastPurchaseDate: finalPurchaseDate,
+                            inboundHistory: updatedInboundHistory,
+                            remarks: remarks // Always update remarks, allows clearing it
+                        };
 
-                    // Reset the form after successful addition
+
+                        await updateDoc(itemRef, updates);
+                        showToast(`已為 "${name}" 添加入庫 ${quantity} 件`);
+                    } else {
+                        // New item, create it
+                         const newItem = {
+                             id: purchaseNumber, // Use purchase number as the document ID
+                             purchaseNumber,
+                             name,
+                             category,
+                             quantity,
+                             lastPurchaseDate: finalPurchaseDate,
+                             purchaseStatus: '', // Default empty status
+                             remarks: remarks,
+                             usageHistory: [], // Initialize as empty array
+                             inboundHistory: [{ date: finalPurchaseDate, quantity, type: 'initial_add' }],
+                         };
+                        const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), purchaseNumber);
+                        await setDoc(itemRef, newItem);
+                        showToast(`"${name}" 已成功新增至庫存`);
+                    }
+
+                    // Reset the form regardless of add/update
                     document.getElementById('add-item-form').reset();
                     // Clear fields derived from lookup and disable category again
                      DOM.itemNameInput.value = '';
@@ -1724,8 +1619,8 @@ T804B綠色/GR,94-618-T804B00,EPSON SCP9000綠色墨水匣GR/700ML,,
 
 
                 } catch (error) {
-                    console.error("儲存新庫存項目時發生錯誤:", error);
-                    showToast('新增失敗，請稍後再試', 'error');
+                    console.error("儲存庫存項目時發生錯誤:", error);
+                    showToast('儲存失敗，請稍後再試', 'error');
                 }
             });
         }
