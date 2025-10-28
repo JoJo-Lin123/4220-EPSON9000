@@ -78,130 +78,116 @@
 </head>
 <body class="min-h-screen antialiased">
 
-    <!-- Login Overlay -->
-    <div id="login-overlay" class="fixed inset-0 bg-slate-100 z-[100] flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm text-center">
-            <i data-lucide="lock" class="mx-auto h-12 w-12 text-indigo-500 mb-4"></i>
-            <h2 class="text-2xl font-bold text-slate-800 mb-4">請輸入密碼</h2>
-            <form id="login-form">
-                <input type="password" id="password-input" required class="w-full px-4 py-2 border border-slate-300 rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 transition" placeholder="密碼">
-                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2.5 px-4 rounded-lg hover:bg-indigo-700 transition-colors btn-action">
-                    登入
-                </button>
-                <p id="login-error" class="text-red-500 text-sm mt-3 h-4"></p>
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+        <!-- 應用程式標題 -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl font-bold text-slate-800 flex justify-center items-center">
+                <i data-lucide="package-search" class="w-10 h-10 mr-4 text-indigo-600"></i>庫存管理系統
+            </h1>
+        </header>
+
+        <!-- 新增耗材表單 -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg mb-10">
+            <div class="flex justify-between items-center mb-5 border-b border-slate-200 pb-4">
+                <h2 class="text-xl font-semibold text-slate-700 flex items-center">
+                    <i data-lucide="plus-circle" class="mr-2 text-indigo-500"></i>新增耗材
+                </h2>
+                <div class="flex items-center space-x-2">
+                    <button id="download-csv-btn" class="text-sm bg-green-100 text-green-700 font-semibold py-2 px-4 rounded-lg hover:bg-green-200 transition-colors flex items-center">
+                        <i data-lucide="download" class="w-4 h-4 mr-2"></i>下載庫存報表
+                    </button>
+                    <button id="manage-mappings-btn" class="text-sm bg-slate-100 text-slate-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors flex items-center">
+                        <i data-lucide="settings-2" class="w-4 h-4 mr-2"></i>管理品項
+                    </button>
+                </div>
+            </div>
+            <form id="add-item-form" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="relative">
+                    <label for="item-purchase-number" class="block text-sm font-medium text-slate-600 mb-1">採購編號 (可搜尋關鍵字)</label>
+                    <input type="text" id="item-purchase-number" placeholder="輸入編號、名稱或品項關鍵字" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" autocomplete="off">
+                    <div id="purchase-number-feedback" class="text-sm text-red-500 mt-1 h-4"></div>
+                    <div id="purchase-number-results" class="absolute z-10 w-full bg-white border border-slate-300 rounded-md mt-1 max-h-60 overflow-y-auto hidden shadow-lg custom-scrollbar"></div>
+                </div>
+                <div>
+                    <label for="item-name" class="block text-sm font-medium text-slate-600 mb-1">耗材名稱</label>
+                    <input type="text" id="item-name" placeholder="將自動帶入" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-slate-50" readonly>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <label for="item-category" class="block text-sm font-medium text-slate-600 mb-1">耗材類別</label>
+                        <button type="button" id="add-category-btn" class="text-indigo-600 hover:text-indigo-800 font-bold mb-1 rounded-full w-6 h-6 flex items-center justify-center bg-indigo-100 hover:bg-indigo-200 transition-colors" title="新增類別">+</button>
+                    </div>
+                    <select id="item-category" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-slate-50" disabled>
+                        <option value="" disabled selected>將自動帶入</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="item-purchase-date" class="block text-sm font-medium text-slate-600 mb-1">進貨日期</label>
+                    <input type="date" id="item-purchase-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+                <div>
+                    <label for="item-quantity" class="block text-sm font-medium text-slate-600 mb-1">目前庫存</label>
+                    <input type="number" id="item-quantity" value="1" min="0" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+                 <div>
+                    <label for="item-remarks" class="block text-sm font-medium text-slate-600 mb-1">備註</label>
+                    <textarea id="item-remarks" rows="1" placeholder="新增備註..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"></textarea>
+                </div>
+                <div class="md:col-span-2">
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors btn-action flex items-center justify-center">
+                        <i data-lucide="plus" class="w-5 h-5 mr-2"></i> 新增至庫存
+                    </button>
+                </div>
             </form>
         </div>
-    </div>
 
-    <!-- Main App Content (Initially Hidden) -->
-    <div id="app-content" class="hidden">
-        <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
-            <!-- 應用程式標題 -->
-            <header class="text-center mb-12">
-                <h1 class="text-4xl sm:text-5xl font-bold text-slate-800 flex justify-center items-center">
-                    <i data-lucide="package-search" class="w-10 h-10 mr-4 text-indigo-600"></i>庫存管理系統
-                </h1>
-            </header>
+        <!-- 庫存清單 -->
+        <div id="inventory-container">
+             <div id="loading-state" class="text-center py-10">
+                 <div class="flex justify-center items-center space-x-2">
+                     <svg class="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                     </svg>
+                     <p class="text-slate-500">正在連接資料庫...</p>
+                 </div>
+             </div>
+             <!-- 庫存總覽 -->
+             <div id="inventory-list-section" class="hidden">
+                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                     <h2 class="text-2xl font-bold text-slate-800">庫存總覽</h2>
+                     <div id="view-toggle" class="flex items-center rounded-lg bg-slate-200 p-1 self-start sm:self-center">
+                         <button data-view="card" class="p-2 rounded-md transition-colors" title="卡片視圖"><i data-lucide="layout-grid" class="w-5 h-5 pointer-events-none"></i></button>
+                         <button data-view="table" class="p-2 rounded-md transition-colors" title="表格視圖"><i data-lucide="list" class="w-5 h-5 pointer-events-none"></i></button>
+                     </div>
+                 </div>
+                 <div id="inventory-list" class="space-y-4"></div>
+             </div>
 
-            <!-- 新增耗材表單 -->
-            <div class="bg-white p-6 rounded-2xl shadow-lg mb-10">
-                <div class="flex justify-between items-center mb-5 border-b border-slate-200 pb-4">
-                    <h2 class="text-xl font-semibold text-slate-700 flex items-center">
-                        <i data-lucide="plus-circle" class="mr-2 text-indigo-500"></i>新增耗材
-                    </h2>
-                    <div class="flex items-center space-x-2">
-                        <button id="download-csv-btn" class="text-sm bg-green-100 text-green-700 font-semibold py-2 px-4 rounded-lg hover:bg-green-200 transition-colors flex items-center">
-                            <i data-lucide="download" class="w-4 h-4 mr-2"></i>下載庫存報表
-                        </button>
-                        <button id="manage-mappings-btn" class="text-sm bg-slate-100 text-slate-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors flex items-center">
-                            <i data-lucide="settings-2" class="w-4 h-4 mr-2"></i>管理品項
-                        </button>
-                    </div>
-                </div>
-                <form id="add-item-form" class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div class="relative">
-                        <label for="item-purchase-number" class="block text-sm font-medium text-slate-600 mb-1">採購編號 (可搜尋關鍵字)</label>
-                        <input type="text" id="item-purchase-number" placeholder="輸入編號、名稱或品項關鍵字" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" autocomplete="off">
-                        <div id="purchase-number-feedback" class="text-sm text-red-500 mt-1 h-4"></div>
-                        <div id="purchase-number-results" class="absolute z-10 w-full bg-white border border-slate-300 rounded-md mt-1 max-h-60 overflow-y-auto hidden shadow-lg custom-scrollbar"></div>
-                    </div>
-                    <div>
-                        <label for="item-name" class="block text-sm font-medium text-slate-600 mb-1">耗材名稱</label>
-                        <input type="text" id="item-name" placeholder="將自動帶入" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-slate-50" readonly>
-                    </div>
-                    <div>
-                        <label for="item-category" class="block text-sm font-medium text-slate-600 mb-1">耗材類別</label>
-                        <input type="text" id="item-category" placeholder="輸入或自動帶入類別" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                        <!-- Removed Add Category Button -->
-                    </div>
-                    <div>
-                        <label for="item-purchase-date" class="block text-sm font-medium text-slate-600 mb-1">進貨日期</label>
-                        <input type="date" id="item-purchase-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                    </div>
-                    <div>
-                        <label for="item-quantity" class="block text-sm font-medium text-slate-600 mb-1">目前庫存</label>
-                        <input type="number" id="item-quantity" value="1" min="0" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                    </div>
-                     <div>
-                        <label for="item-remarks" class="block text-sm font-medium text-slate-600 mb-1">備註</label>
-                        <textarea id="item-remarks" rows="1" placeholder="新增備註..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"></textarea>
-                    </div>
-                    <div class="md:col-span-2">
-                        <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors btn-action flex items-center justify-center">
-                            <i data-lucide="plus" class="w-5 h-5 mr-2"></i> 新增至庫存
-                        </button>
-                    </div>
-                </form>
+             <!-- 拆封紀錄 -->
+             <div id="unseal-history-section" class="mt-12 hidden">
+                 <h3 class="text-xl font-semibold text-slate-700 mb-4 border-b-2 border-slate-200 pb-2 flex items-center">
+                     <i data-lucide="history" class="mr-3 text-slate-500"></i>最近拆封紀錄
+                 </h3>
+                 <div id="unseal-history-list" class="space-y-2 bg-white p-4 rounded-xl shadow-md">
+                     <!-- History items will be injected here -->
+                 </div>
+             </div>
+
+        </div> <!-- This is the end of inventory-container -->
+
+        <!-- New Log Section Moved Here -->
+        <div id="mappings-log-container" class="mt-12 hidden">
+            <h3 class="text-xl font-semibold text-slate-700 mb-4 border-b-2 border-slate-200 pb-2 flex items-center">
+                <i data-lucide="clipboard-list" class="mr-3 text-slate-500"></i>紀錄
+            </h3>
+            <div id="mappings-log-list" class="max-h-60 overflow-y-auto space-y-2 pr-2 custom-scrollbar text-sm text-slate-600 bg-white p-4 rounded-xl shadow-md">
+                <p class="text-slate-400">正在載入紀錄...</p>
             </div>
+        </div>
+        <!-- End New Log Section -->
 
-            <!-- 庫存清單 -->
-            <div id="inventory-container">
-                 <div id="loading-state" class="text-center py-10">
-                     <div class="flex justify-center items-center space-x-2">
-                         <svg class="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                         </svg>
-                         <p class="text-slate-500">正在連接資料庫...</p>
-                     </div>
-                 </div>
-                 <!-- 庫存總覽 -->
-                 <div id="inventory-list-section" class="hidden">
-                     <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
-                         <h2 class="text-2xl font-bold text-slate-800">庫存總覽</h2>
-                         <div id="view-toggle" class="flex items-center rounded-lg bg-slate-200 p-1 self-start sm:self-center">
-                             <button data-view="card" class="p-2 rounded-md transition-colors" title="卡片視圖"><i data-lucide="layout-grid" class="w-5 h-5 pointer-events-none"></i></button>
-                             <button data-view="table" class="p-2 rounded-md transition-colors" title="表格視圖"><i data-lucide="list" class="w-5 h-5 pointer-events-none"></i></button>
-                         </div>
-                     </div>
-                     <div id="inventory-list" class="space-y-4"></div>
-                 </div>
-
-                 <!-- 拆封紀錄 -->
-                 <div id="unseal-history-section" class="mt-12 hidden">
-                     <h3 class="text-xl font-semibold text-slate-700 mb-4 border-b-2 border-slate-200 pb-2 flex items-center">
-                         <i data-lucide="history" class="mr-3 text-slate-500"></i>最近拆封紀錄
-                     </h3>
-                     <div id="unseal-history-list" class="space-y-2 bg-white p-4 rounded-xl shadow-md">
-                         <!-- History items will be injected here -->
-                     </div>
-                 </div>
-
-            </div> <!-- This is the end of inventory-container -->
-
-            <!-- New Log Section Moved Here -->
-            <div id="mappings-log-container" class="mt-12 hidden">
-                <h3 class="text-xl font-semibold text-slate-700 mb-4 border-b-2 border-slate-200 pb-2 flex items-center">
-                    <i data-lucide="clipboard-list" class="mr-3 text-slate-500"></i>紀錄
-                </h3>
-                <div id="mappings-log-list" class="max-h-60 overflow-y-auto space-y-2 pr-2 custom-scrollbar text-sm text-slate-600 bg-white p-4 rounded-xl shadow-md">
-                    <p class="text-slate-400">正在載入紀錄...</p>
-                </div>
-            </div>
-            <!-- End New Log Section -->
-
-        </div> <!-- This is the end of div.container -->
-    </div> <!-- This is the end of #app-content -->
+    </div> <!-- This is the end of div.container -->
 
     <!-- Modals -->
     <div id="mappings-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden opacity-0 z-50">
@@ -222,10 +208,7 @@
                         <input type="text" id="new-item-name" placeholder="請輸入對應的耗材名稱" required class="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
                     </div>
                     <div>
-                        <div class="flex items-center gap-2">
-                             <label for="new-item-category" class="text-sm font-medium text-slate-600">耗材類別 (品項)</label>
-                             <button type="button" id="add-modal-category-btn" class="text-indigo-600 hover:text-indigo-800 font-bold mb-1 rounded-full w-6 h-6 flex items-center justify-center bg-indigo-100 hover:bg-indigo-200 transition-colors" title="新增類別">+</button>
-                        </div>
+                        <label for="new-item-category" class="text-sm font-medium text-slate-600">耗材類別 (品項)</label>
                         <select id="new-item-category" required class="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition bg-white"></select>
                     </div>
                     <div id="mapping-form-buttons" class="!mt-4 space-y-2">
@@ -331,7 +314,6 @@
             VIEW_MODE_KEY: `inventory_view_${getAppId()}`,
             INK_LOW_STOCK_THRESHOLD: 2,
             OTHER_LOW_STOCK_THRESHOLD: 3,
-            PASSWORD: "0" // Temporary password
         };
 
         // Removed embedded CSV data
@@ -339,19 +321,14 @@
 
         // --- DOM Elements ---
         const DOM = {
-            loginOverlay: document.getElementById('login-overlay'),
-            loginForm: document.getElementById('login-form'),
-            passwordInput: document.getElementById('password-input'),
-            loginError: document.getElementById('login-error'),
-            appContent: document.getElementById('app-content'),
             inventoryContainer: document.getElementById('inventory-container'),
             loadingState: document.getElementById('loading-state'),
             inventoryList: document.getElementById('inventory-list'),
             inventoryListSection: document.getElementById('inventory-list-section'),
             purchaseNumberInput: document.getElementById('item-purchase-number'),
             itemNameInput: document.getElementById('item-name'),
-            categoryInput: document.getElementById('item-category'), // Changed from categorySelect
-            // addCategoryBtn: document.getElementById('add-category-btn'), // Removed button from main form
+            categorySelect: document.getElementById('item-category'),
+            addCategoryBtn: document.getElementById('add-category-btn'),
             itemPurchaseDate: document.getElementById('item-purchase-date'),
             manageMappingsBtn: document.getElementById('manage-mappings-btn'),
             mappingsModal: document.getElementById('mappings-modal'),
@@ -359,7 +336,6 @@
             addMappingForm: document.getElementById('add-mapping-form'),
             mappingsListContainer: document.getElementById('mappings-list-container'),
             newItemCategorySelect: document.getElementById('new-item-category'),
-            addModalCategoryBtn: document.getElementById('add-modal-category-btn'), // Added ID for modal button
             purchaseNumberFeedback: document.getElementById('purchase-number-feedback'),
             purchaseNumberResults: document.getElementById('purchase-number-results'),
             mappingFormTitle: document.getElementById('mapping-form-title'),
@@ -412,7 +388,6 @@
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
-            if (!container) return; // Add check if container exists
             const toast = document.createElement('div');
             const icon = type === 'success'
                 ? `<i data-lucide="check-circle" class="w-5 h-5 text-green-500"></i>`
@@ -452,7 +427,6 @@
                  DOM.loadingState.style.display = 'none';
             }
             const mainListContainer = DOM.inventoryList;
-            if (!mainListContainer) return; // Add check
 
             mainListContainer.innerHTML = '';
             mainListContainer.className = 'space-y-8';
@@ -511,7 +485,7 @@
 
 
         function renderGroup(container, items) {
-            if (!container || items.length === 0) return; // Add check
+            if (items.length === 0) return;
 
               if (currentView === 'card') {
                  container.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4';
@@ -661,7 +635,6 @@
 
         function renderUnsealHistory() {
             const historyList = DOM.unsealHistoryList;
-            if (!historyList) return; // Add check
             historyList.innerHTML = '';
 
             const allHistory = allSupplies
@@ -669,7 +642,7 @@
                 .sort((a, b) => new Date(b.unsealedDate) - new Date(a.unsealedDate));
 
             if (allHistory.length > 0) {
-                if(DOM.unsealHistorySection) DOM.unsealHistorySection.style.display = 'block'; // Add check
+                DOM.unsealHistorySection.style.display = 'block';
                 allHistory.slice(0, 15).forEach(entry => { // Show latest 15
                     const li = document.createElement('div');
                     li.className = 'text-sm text-slate-600 border-b border-slate-100 py-2 flex justify-between items-center';
@@ -689,7 +662,7 @@
                 });
                 lucide.createIcons();
             } else {
-                if(DOM.unsealHistorySection) DOM.unsealHistorySection.style.display = 'none'; // Add check
+                DOM.unsealHistorySection.style.display = 'none';
             }
         }
 
@@ -762,20 +735,16 @@
 
         // --- Modal & Confirmation Logic ---
         function openModal(modal) {
-            if (!modal) return; // Add check
             modal.classList.remove('hidden');
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
-                const content = modal.querySelector('.modal-content');
-                if (content) content.classList.remove('opacity-0', '-translate-y-10'); // Add check
+                modal.querySelector('.modal-content').classList.remove('opacity-0', '-translate-y-10');
             }, 10);
         }
 
         function closeModal(modal) {
-            if (!modal) return; // Add check
             modal.classList.add('opacity-0');
-            const content = modal.querySelector('.modal-content');
-            if (content) content.classList.add('opacity-0', '-translate-y-10'); // Add check
+            modal.querySelector('.modal-content').classList.add('opacity-0', '-translate-y-10');
             setTimeout(() => {
                 modal.classList.add('hidden');
                 if (modal === DOM.mappingsModal) {
@@ -788,14 +757,8 @@
 
         function showConfirmation(title, message, onConfirm, type = 'red') {
             const modal = DOM.confirmationModal;
-            if (!modal) return; // Add check
             const confirmBtn = modal.querySelector('#confirm-btn');
             const iconContainer = modal.querySelector('#confirmation-icon');
-            const titleEl = modal.querySelector('#confirmation-title');
-            const messageEl = modal.querySelector('#confirmation-message');
-            const cancelBtn = modal.querySelector('#cancel-confirmation-btn');
-
-            if(!confirmBtn || !iconContainer || !titleEl || !messageEl || !cancelBtn) return; // Add checks
 
             const typeMap = {
                 red: { btn: 'bg-red-600 hover:bg-red-700', icon: 'bg-red-100', iconContent: `<i data-lucide="alert-triangle" class="h-6 w-6 text-red-600"></i>` },
@@ -803,8 +766,8 @@
                 orange: { btn: 'bg-orange-500 hover:bg-orange-600', icon: 'bg-orange-100', iconContent: `<i data-lucide="alert-circle" class="h-6 w-6 text-orange-600"></i>` }
             };
 
-            titleEl.textContent = title;
-            messageEl.textContent = message;
+            modal.querySelector('#confirmation-title').textContent = title;
+            modal.querySelector('#confirmation-message').textContent = message;
 
             confirmBtn.className = `w-full text-white font-semibold py-2 px-4 rounded-lg transition-colors ${typeMap[type].btn}`;
             iconContainer.className = `mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4 ${typeMap[type].icon}`;
@@ -820,11 +783,11 @@
                 closeModal(modal);
             };
 
-            // Clone and replace to remove old listeners
             const confirmBtnClone = confirmBtn.cloneNode(true);
             confirmBtn.parentNode.replaceChild(confirmBtnClone, confirmBtn);
             confirmBtnClone.addEventListener('click', newConfirmHandler, { once: true });
 
+            const cancelBtn = modal.querySelector('#cancel-confirmation-btn');
             const cancelBtnClone = cancelBtn.cloneNode(true);
             cancelBtn.parentNode.replaceChild(cancelBtnClone, cancelBtn);
             cancelBtnClone.addEventListener('click', newCancelHandler, { once: true });
@@ -834,8 +797,9 @@
 
         // --- Mappings and Category Logic ---
         function initializeAndLoadMappings() {
-            // 1. Base mappings start empty
-            const csvBasedMappings = {};
+            // 1. Parse CSV data first to get base mappings (Now returns empty)
+            const csvBasedMappings = {}; // Starts empty
+             // Removed CSV parsing logic
 
             // 2. Listen to Firestore for updates
             const mappingsRef = collection(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION));
@@ -844,23 +808,23 @@
                 snapshot.forEach(doc => {
                     firestoreMappings[doc.id] = doc.data();
                 });
-                // 3. Merge Firestore data
-                purchaseNumberMap = { ...csvBasedMappings, ...firestoreMappings };
+                // 3. Merge Firestore data over CSV defaults (which is empty)
+                purchaseNumberMap = { ...csvBasedMappings, ...firestoreMappings }; // Effectively just Firestore data
                 renderMappingsList();
-                populateCategorySelects(); // Update modal select
+                populateCategorySelects();
             }, (error) => {
                  console.error("讀取品項對照表時發生錯誤:", error);
                  showToast('讀取品項對照表失敗', 'error');
-                 if (Object.keys(purchaseNumberMap).length === 0) {
-                     purchaseNumberMap = {};
+                 // Initialize with empty map if Firestore fails initially and map is empty
+                 if (Object.keys(purchaseNumberMap).length === 0) { // Check if map wasn't already populated
+                     purchaseNumberMap = { ...csvBasedMappings }; // Initialize as empty
                      renderMappingsList();
-                     populateCategorySelects(); // Update modal select even on error
+                     populateCategorySelects();
                  }
             });
         }
 
         function renderMappingsList() {
-             if (!DOM.mappingsListContainer) return; // Add check
             DOM.mappingsListContainer.innerHTML = '';
 
             const container = document.createElement('div');
@@ -876,14 +840,13 @@
                 let elementToScrollTo = null; // Variable to hold the element
                 sortedKeys.forEach(number => {
                     const item = purchaseNumberMap[number];
-                    if (!item) return; // Skip if item data is missing
                     const div = document.createElement('div');
                     div.className = 'flex justify-between items-center text-sm bg-slate-100 p-2 rounded-md transition-all duration-300';
                     div.dataset.mappingKey = number; // Add a data-attribute for selection
                     div.innerHTML = `
                         <div>
                             <strong class="text-slate-800">${number}</strong>
-                            <span class="text-slate-600 ml-2">${item.name || 'N/A'} (${item.category || 'N/A'})</span>
+                            <span class="text-slate-600 ml-2">${item.name} (${item.category})</span>
                         </div>
                         <div class="flex items-center gap-3">
                             <button data-key="${number}" class="edit-mapping-btn text-slate-500 hover:text-indigo-600" title="編輯">
@@ -911,7 +874,7 @@
 
                     // Remove highlight after a delay
                     setTimeout(() => {
-                        if (elementToScrollTo) elementToScrollTo.classList.remove('bg-indigo-100', 'ring-2', 'ring-indigo-500'); // Add check
+                        elementToScrollTo.classList.remove('bg-indigo-100', 'ring-2', 'ring-indigo-500');
                     }, 2500);
                 }
             }
@@ -924,7 +887,6 @@
             // Clear old listener if it exists
             if (mappingLogUnsubscribe) {
                 mappingLogUnsubscribe();
-                mappingLogUnsubscribe = null; // Reset handle
             }
 
             const logsRef = collection(db, getCollectionPath(CONSTANTS.MAPPING_LOGS_COLLECTION));
@@ -938,8 +900,7 @@
                 renderMappingLogs(logs);
             }, (error) => {
                 console.error("無法讀取品項日誌:", error);
-                 const logListEl = document.getElementById('mappings-log-list');
-                 if (logListEl) logListEl.innerHTML = '<p class="text-red-500">無法載入紀錄。</p>'; // Add check
+                document.getElementById('mappings-log-list').innerHTML = '<p class="text-red-500">無法載入紀錄。</p>';
             });
         }
 
@@ -947,78 +908,65 @@
             const listEl = document.getElementById('mappings-log-list');
             if (!listEl) return;
             const containerEl = document.getElementById('mappings-log-container');
-            if (!containerEl) return; // Add check
 
             if (logs.length === 0) {
                 listEl.innerHTML = '<p class="text-slate-400">尚無任何操作紀錄。</p>';
-            } else {
-                listEl.innerHTML = logs.map(log => {
-                     const date = new Date(log.timestamp);
-                     // Check if date is valid before formatting
-                     const formattedDate = !isNaN(date)
-                        ? `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
-                        : '無效日期';
-                    return `
-                        <div class="border-b border-slate-200 pb-1 mb-1">
-                            <p class="font-medium text-slate-700">${log.action || '未知操作'}</p>
-                            <p class="text-xs text-slate-500">${formattedDate}</p>
-                        </div>
-                    `;
-                }).join('');
+                containerEl.style.display = 'block'; // Show even if empty
+                return;
             }
+
+            listEl.innerHTML = logs.map(log => {
+                const date = new Date(log.timestamp);
+                const formattedDate = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                return `
+                    <div class="border-b border-slate-200 pb-1 mb-1">
+                        <p class="font-medium text-slate-700">${log.action}</p>
+                        <p class="text-xs text-slate-500">${formattedDate}</p>
+                    </div>
+                `;
+            }).join('');
             containerEl.style.display = 'block'; // Show the container
         }
 
         function startEditMode(key) {
-             if (!purchaseNumberMap[key]) return; // Add check
             editingKey = key;
             const item = purchaseNumberMap[key];
-            if(DOM.mappingFormTitle) DOM.mappingFormTitle.textContent = '編輯對照品項'; // Add check
-            const numInput = document.getElementById('new-purchase-number');
-            const nameInput = document.getElementById('new-item-name');
-            if (numInput) numInput.value = key;
-            if (nameInput) nameInput.value = item.name;
-            if (DOM.newItemCategorySelect) DOM.newItemCategorySelect.value = item.category; // Add check
+            DOM.mappingFormTitle.textContent = '編輯對照品項';
+            document.getElementById('new-purchase-number').value = key;
+            document.getElementById('new-item-name').value = item.name;
+            DOM.newItemCategorySelect.value = item.category;
 
-             if(DOM.mappingFormButtons) { // Add check
-                DOM.mappingFormButtons.innerHTML = `
-                    <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors btn-action">更新品項</button>
-                    <button type="button" id="cancel-edit-btn" class="w-full bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">取消</button>
-                `;
-                const cancelBtn = document.getElementById('cancel-edit-btn');
-                if(cancelBtn) cancelBtn.addEventListener('click', cancelEditMode); // Add check
-             }
-             if(DOM.addMappingForm) DOM.addMappingForm.scrollIntoView({ behavior: 'smooth' }); // Add check
+            DOM.mappingFormButtons.innerHTML = `
+                <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors btn-action">更新品項</button>
+                <button type="button" id="cancel-edit-btn" class="w-full bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">取消</button>
+            `;
+            document.getElementById('cancel-edit-btn').addEventListener('click', cancelEditMode);
+            DOM.addMappingForm.scrollIntoView({ behavior: 'smooth' });
         }
 
         function cancelEditMode() {
             editingKey = null;
-            if(DOM.addMappingForm) DOM.addMappingForm.reset(); // Add check
-            if(DOM.mappingFormTitle) DOM.mappingFormTitle.textContent = '新增對照品項'; // Add check
-            if(DOM.mappingFormButtons) { // Add check
-                 DOM.mappingFormButtons.innerHTML = `
-                    <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors btn-action">儲存品項</button>
-                `;
-            }
+            DOM.addMappingForm.reset();
+            DOM.mappingFormTitle.textContent = '新增對照品項';
+            DOM.mappingFormButtons.innerHTML = `
+                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors btn-action">儲存品項</button>
+            `;
         }
 
         async function populateCategorySelects() {
-            // Only populates the modal select now
-            if (!DOM.newItemCategorySelect) return; // Add check
+            const customCategoriesRef = collection(db, getCollectionPath(CONSTANTS.CUSTOM_CATEGORIES_COLLECTION));
+            const snapshot = await getDocs(customCategoriesRef);
+            const customCategories = snapshot.docs.map(doc => doc.id);
+            // Derive categories also from the *current* purchaseNumberMap which includes Firestore only now
+            const allCategories = [...new Set(Object.values(purchaseNumberMap).map(item => item.category))];
+            const finalCategories = [...new Set([...allCategories, ...customCategories])].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
 
-            try {
-                const customCategoriesRef = collection(db, getCollectionPath(CONSTANTS.CUSTOM_CATEGORIES_COLLECTION));
-                const snapshot = await getDocs(customCategoriesRef);
-                const customCategories = snapshot.docs.map(doc => doc.id);
-                // Derive categories also from the *current* purchaseNumberMap
-                const allCategories = [...new Set(Object.values(purchaseNumberMap).map(item => item.category).filter(Boolean))]; // Filter out potential undefined/null
-                const finalCategories = [...new Set([...allCategories, ...customCategories])].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
-
-                const select = DOM.newItemCategorySelect;
+            const selects = [DOM.categorySelect, DOM.newItemCategorySelect];
+            selects.forEach(select => {
                 const currentVal = select.value;
-                select.innerHTML = ''; // Clear previous options
-
-                // Add default empty option if needed, e.g., <option value="">請選擇</option>
+                const placeholder = select.querySelector('option[disabled]');
+                select.innerHTML = '';
+                if(placeholder) select.appendChild(placeholder);
 
                 finalCategories.forEach(categoryName => {
                     const option = document.createElement('option');
@@ -1026,48 +974,42 @@
                     option.textContent = categoryName;
                     select.appendChild(option);
                 });
+                // Restore previous selection if possible, otherwise leave it (or set to placeholder if it exists)
+                 if (finalCategories.includes(currentVal)) {
+                     select.value = currentVal;
+                 } else if (!placeholder) {
+                     select.value = ''; // Or select the first available option?
+                 }
 
-                // Restore previous selection if possible
-                if (finalCategories.includes(currentVal)) {
-                    select.value = currentVal;
-                } else {
-                    select.value = ''; // Or select the first available option?
-                }
-            } catch (error) {
-                console.error("無法載入類別選項:", error);
-                // Handle error, maybe show a default option or message
-                DOM.newItemCategorySelect.innerHTML = '<option value="">無法載入類別</option>';
-            }
+            });
         }
 
+        function addCategoryOption(categoryName, selectAfterAdding = false) {
+            if (!categoryName) return;
 
-        function addCategoryOption(categoryName) {
-            // Only adds to the modal select now
-            if (!categoryName || !DOM.newItemCategorySelect) return;
+            const selects = [DOM.categorySelect, DOM.newItemCategorySelect];
+            selects.forEach(select => {
+                 if (!Array.from(select.options).some(opt => opt.value === categoryName)){
+                     const option = document.createElement('option');
+                     option.value = categoryName;
+                     option.textContent = categoryName;
+                     select.appendChild(option);
+                      // Re-sort options? Optional, might be complex if done frequently
+                 }
+            });
 
-            const select = DOM.newItemCategorySelect;
-            if (!Array.from(select.options).some(opt => opt.value === categoryName)){
-                const option = document.createElement('option');
-                option.value = categoryName;
-                option.textContent = categoryName;
-                select.appendChild(option);
-                // Optional: Re-sort options after adding
-                // sortSelectOptions(select);
+            if (selectAfterAdding) {
+                // Ensure the category select is enabled before setting the value
+                DOM.categorySelect.disabled = false;
+                DOM.categorySelect.classList.remove('bg-slate-50');
+                DOM.categorySelect.value = categoryName;
             }
         }
 
         async function saveCustomCategory(categoryName) {
-             if (!categoryName) return;
-             try {
-                const categoryRef = doc(db, getCollectionPath(CONSTANTS.CUSTOM_CATEGORIES_COLLECTION), categoryName);
-                await setDoc(categoryRef, { name: categoryName });
-                await populateCategorySelects(); // Refresh modal dropdown after saving
-                return true; // Indicate success
-             } catch (error) {
-                 console.error("儲存自訂類別失敗:", error);
-                 showToast('儲存新類別失敗', 'error');
-                 return false; // Indicate failure
-             }
+            const categoryRef = doc(db, getCollectionPath(CONSTANTS.CUSTOM_CATEGORIES_COLLECTION), categoryName);
+            await setDoc(categoryRef, { name: categoryName });
+            populateCategorySelects(); // Refresh dropdowns after saving
         }
 
 
@@ -1075,42 +1017,27 @@
 
         function openAddStockModal(item) {
             currentlyEditingItemId = item.id;
-            if(DOM.addStockForm) { // Add check
-                DOM.addStockForm.reset();
-                const dateInput = DOM.addStockForm['add-stock-date'];
-                if (dateInput) dateInput.value = getLocalDate(); // Add check
-            }
+            DOM.addStockForm.reset();
+            DOM.addStockForm['add-stock-date'].value = getLocalDate();
             openModal(DOM.addStockModal);
         }
 
         function openEditModal(item) {
             currentlyEditingItemId = item.id;
-             if(DOM.editItemForm) { // Add check
-                const dateInput = DOM.editItemForm['edit-last-purchase-date'];
-                const qtyInput = DOM.editItemForm['edit-quantity'];
-                const statusInput = DOM.editItemForm['edit-purchase-status'];
-                const remarksInput = DOM.editItemForm['edit-remarks'];
-
-                if(dateInput) dateInput.value = item.lastPurchaseDate || '';
-                if(qtyInput) qtyInput.value = item.quantity;
-                if(statusInput) statusInput.value = item.purchaseStatus || '';
-                if(remarksInput) remarksInput.value = item.remarks || '';
-            }
+            DOM.editItemForm['edit-last-purchase-date'].value = item.lastPurchaseDate || '';
+            DOM.editItemForm['edit-quantity'].value = item.quantity;
+            DOM.editItemForm['edit-purchase-status'].value = item.purchaseStatus || '';
+            DOM.editItemForm['edit-remarks'].value = item.remarks || '';
             openModal(DOM.editItemModal);
         }
 
         async function setupAddStockFormListener() {
-             if (!DOM.addStockForm) return; // Add check
             DOM.addStockForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!currentlyEditingItemId) return;
 
-                const dateInput = DOM.addStockForm['add-stock-date'];
-                const qtyInput = DOM.addStockForm['add-stock-quantity'];
-                if (!dateInput || !qtyInput) return; // Add checks
-
-                const date = dateInput.value || getLocalDate();
-                const quantity = parseInt(qtyInput.value, 10);
+                const date = DOM.addStockForm['add-stock-date'].value || getLocalDate();
+                const quantity = parseInt(DOM.addStockForm['add-stock-quantity'].value, 10);
 
                 if (isNaN(quantity) || quantity <= 0) {
                     showToast('請輸入有效的數量', 'error');
@@ -1119,45 +1046,32 @@
 
                 const item = allSupplies.find(s => s.id === currentlyEditingItemId);
                 if (item) {
-                     try {
-                        const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), item.id);
-                        const historyEntry = { date, quantity, type: 'restock' };
-                        const updatedHistory = [...(item.inboundHistory || []), historyEntry];
+                    const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), item.id);
+                    const newQuantity = item.quantity + quantity; // Not used for update, just for logic/history
+                    const historyEntry = { date, quantity, type: 'restock' };
+                    const updatedHistory = [...(item.inboundHistory || []), historyEntry];
 
-                        await updateDoc(itemRef, {
-                            quantity: increment(quantity), // Use increment here
-                            lastPurchaseDate: date,
-                            inboundHistory: updatedHistory
-                        });
+                    await updateDoc(itemRef, {
+                        quantity: increment(quantity), // Use increment here
+                        lastPurchaseDate: date,
+                        inboundHistory: updatedHistory
+                    });
 
-                        closeModal(DOM.addStockModal);
-                        showToast('入庫成功');
-                    } catch (error) {
-                        console.error("添加入庫失敗:", error);
-                        showToast('入庫失敗，請稍後再試', 'error');
-                    }
-                } else {
-                     showToast('找不到要更新的項目', 'error');
+                    closeModal(DOM.addStockModal);
+                    showToast('入庫成功');
                 }
             });
         }
 
         async function setupEditFormListener() {
-             if(!DOM.editItemForm) return; // Add check
             DOM.editItemForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!currentlyEditingItemId) return;
 
-                const dateInput = DOM.editItemForm['edit-last-purchase-date'];
-                const qtyInput = DOM.editItemForm['edit-quantity'];
-                const statusInput = DOM.editItemForm['edit-purchase-status'];
-                const remarksInput = DOM.editItemForm['edit-remarks'];
-                if(!dateInput || !qtyInput || !statusInput || !remarksInput) return; // Add checks
-
-                const newLastPurchaseDate = dateInput.value;
-                const newQuantity = parseInt(qtyInput.value, 10);
-                const newPurchaseStatus = statusInput.value.trim();
-                const newRemarks = remarksInput.value.trim();
+                const newLastPurchaseDate = DOM.editItemForm['edit-last-purchase-date'].value;
+                const newQuantity = parseInt(DOM.editItemForm['edit-quantity'].value, 10);
+                const newPurchaseStatus = DOM.editItemForm['edit-purchase-status'].value.trim();
+                const newRemarks = DOM.editItemForm['edit-remarks'].value.trim();
 
 
                 if (isNaN(newQuantity) || newQuantity < 0) { // Also check for negative
@@ -1165,34 +1079,26 @@
                     return;
                 }
 
-                 try {
-                    const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), currentlyEditingItemId);
-                    await updateDoc(itemRef, {
-                        quantity: newQuantity, // Direct set for edit
-                        lastPurchaseDate: newLastPurchaseDate,
-                        purchaseStatus: newPurchaseStatus,
-                        remarks: newRemarks
-                    });
+                const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), currentlyEditingItemId);
+                await updateDoc(itemRef, {
+                    quantity: newQuantity, // Direct set for edit
+                    lastPurchaseDate: newLastPurchaseDate,
+                    purchaseStatus: newPurchaseStatus,
+                    remarks: newRemarks
+                });
 
-                    closeModal(DOM.editItemModal);
-                    showToast('庫存項目更新成功');
-                } catch (error) {
-                    console.error("更新庫存失敗:", error);
-                    showToast('更新失敗，請稍後再試', 'error');
-                }
+                closeModal(DOM.editItemModal);
+                showToast('庫存項目更新成功');
             });
         }
 
         // --- Unseal History Deletion ---
         function setupUnsealHistoryListener() {
-            if (!DOM.unsealHistoryList) return; // Add check
             DOM.unsealHistoryList.addEventListener('click', e => {
                 const deleteBtn = e.target.closest('.delete-history-btn');
                 if (!deleteBtn) return;
 
                 const { itemId, historyId } = deleteBtn.dataset;
-                if (!itemId || !historyId) return; // Add check
-
                 const item = allSupplies.find(s => s.id === itemId);
 
                 if (!item) {
@@ -1232,10 +1138,8 @@
         function setView(view) {
             currentView = view;
             localStorage.setItem(CONSTANTS.VIEW_MODE_KEY, view);
-            if (!DOM.viewToggle) return; // Add check
             const cardBtn = DOM.viewToggle.querySelector('[data-view="card"]');
             const tableBtn = DOM.viewToggle.querySelector('[data-view="table"]');
-            if (!cardBtn || !tableBtn) return; // Add checks
 
             cardBtn.classList.toggle('bg-white', view === 'card');
             cardBtn.classList.toggle('shadow-sm', view === 'card');
@@ -1293,7 +1197,6 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            URL.revokeObjectURL(url); // Clean up object URL
             showToast('報表已開始下載');
         }
 
@@ -1305,7 +1208,6 @@
         }
 
         async function addMappingLog(actionMessage) {
-             if (!db) return; // Ensure DB is initialized
             try {
                 const logsRef = collection(db, getCollectionPath(CONSTANTS.MAPPING_LOGS_COLLECTION));
                 await addDoc(logsRef, {
@@ -1320,51 +1222,30 @@
         }
 
         async function seedInitialData() {
-             if (!db) return; // Ensure DB is initialized
-             try {
-                const suppliesRef = collection(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION));
-                const q = query(suppliesRef, limit(1));
-                const snapshot = await getDocs(q);
+            const suppliesRef = collection(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION));
+            const q = query(suppliesRef, limit(1));
+            const snapshot = await getDocs(q);
 
-                if (snapshot.empty) {
-                    console.log("資料庫是空的，沒有初始資料可植入。");
-                } else {
-                    console.log("資料庫已有資料，跳過植入步驟。");
-                }
-            } catch(error) {
-                 console.error("檢查或植入初始資料時失敗:", error);
-                 // Maybe show an error to the user if this is critical
+            // Since CSV data is removed, this function will now only check if DB is empty
+            // and skip seeding, which is intended.
+            if (snapshot.empty) {
+                console.log("資料庫是空的，沒有初始資料可植入。");
+                // const initialSupplies = getInitialDataFromCSV(); // This is now []
+                // if (initialSupplies.length > 0) { // This condition will be false
+                //    ... batch write logic ...
+                // }
+            } else {
+                console.log("資料庫已有資料，跳過植入步驟。");
             }
         }
 
-        // --- Login Function ---
-        function handleLogin() {
-            if (!DOM.loginForm || !DOM.passwordInput || !DOM.loginError || !DOM.loginOverlay || !DOM.appContent) return; // Add checks
-
-            DOM.loginForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const enteredPassword = DOM.passwordInput.value;
-                if (enteredPassword === CONSTANTS.PASSWORD) {
-                    DOM.loginError.textContent = '';
-                    DOM.loginOverlay.classList.add('hidden'); // Hide login
-                    DOM.appContent.classList.remove('hidden'); // Show app
-                    // Initialize Firebase and the rest of the app AFTER successful login
-                    initializeAppAndLoadData();
-                } else {
-                    DOM.loginError.textContent = '密碼錯誤，請重試。';
-                    DOM.passwordInput.focus();
-                    DOM.passwordInput.select();
-                }
-            });
-        }
-
-        // --- App Initialization Function (Called after login) ---
-        async function initializeAppAndLoadData() {
+        // --- Main Initialization ---
+        async function main() {
             // --- Firebase Setup ---
             try {
                 /* --- GitHub 發布專用 Firebase 設定 --- */
                 const firebaseConfig = {
-                    apiKey: "AIzaSyD1Mo73znKs93FiyaXVCnKERAaWzSk_WFY", // Replace with your actual API key
+                    apiKey: "AIzaSyD1Mo73znKs93FiyaXVCnKERAaWzSk_WFY",
                     authDomain: "epson9000-9bcf2.firebaseapp.com",
                     projectId: "epson9000-9bcf2",
                     storageBucket: "epson9000-9bcf2.firebasestorage.app",
@@ -1374,7 +1255,7 @@
                 /* ------------------------------------ */
 
                 if (!firebaseConfig.apiKey.startsWith("AIza")) {
-                     if(DOM.loadingState) DOM.loadingState.innerHTML = `<p class="text-red-500">錯誤：請在程式碼中填入您的 Firebase 設定碼。</p>`; // Add check
+                    DOM.loadingState.innerHTML = `<p class="text-red-500">錯誤：請在程式碼中填入您的 Firebase 設定碼。</p>`;
                     return;
                 }
 
@@ -1383,88 +1264,102 @@
                 auth = getAuth(app);
 
                 await signInAnonymously(auth);
-                userId = auth.currentUser ? auth.currentUser.uid : null; // Add check
-                if (!userId) {
-                    throw new Error("匿名登入失敗，無法取得 User ID。");
-                }
+
+                userId = auth.currentUser.uid;
 
                 await seedInitialData(); // Will now just check and likely skip
 
             } catch (error) {
                 console.error("Firebase 初始化失敗:", error);
-                const loadingEl = DOM.loadingState; // Cache element
-                 if (loadingEl) { // Add check
-                    if (error.code === 'auth/configuration-not-found') {
-                        loadingEl.innerHTML = `<div class="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-lg text-left max-w-2xl mx-auto">... [Firebase 匿名登入設定提示] ...</div>`; // Shortened for brevity
-                        lucide.createIcons();
-                    } else {
-                        loadingEl.innerHTML = `<p class="text-red-500">錯誤：無法連接到資料庫。請確認 Firebase 設定是否正確，並檢查網路連線。</p>`;
-                    }
-                 }
+                if (error.code === 'auth/configuration-not-found') {
+                    DOM.loadingState.innerHTML = `<div class="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-lg text-left max-w-2xl mx-auto">
+                                                 <div class="flex items-center">
+                                                     <div class="flex-shrink-0">
+                                                         <i data-lucide="alert-triangle" class="h-6 w-6 text-amber-600"></i>
+                                                     </div>
+                                                     <div class="ml-4">
+                                                         <h3 class="text-lg font-bold text-amber-800">需要一個重要設定！</h3>
+                                                         <p class="text-slate-700 mt-2">您的 Firebase 專案尚未啟用「匿名登入」，這是讓應用程式連接資料庫的必要步驟。</p>
+                                                     </div>
+                                                 </div>
+                                                 <div class="mt-4">
+                                                     <p class="text-slate-600 font-semibold">請依照以下步驟完成設定：</p>
+                                                     <ol class="list-decimal list-inside text-slate-600 space-y-2 mt-2 pl-2">
+                                                         <li>點擊此連結前往您的 Firebase 專案：<a href="https://console.firebase.google.com/" target="_blank" class="font-semibold text-blue-600 underline hover:text-blue-800">Firebase 控制台</a>。</li>
+                                                         <li>在左側選單中，找到並點擊「<b>Authentication</b>」。</li>
+                                                         <li>進入 Authentication 後，點擊上方的「<b>Sign-in method</b>」分頁。</li>
+                                                         <li>在服務商列表中找到「<b>匿名</b>」，點擊它並將開關設定為「<b>啟用</b>」，然後儲存。</li>
+                                                         <li>完成後，回到此頁面並<b>重新整理</b>。</li>
+                                                     </ol>
+                                                     <p class="mt-4 text-xs text-slate-500">這不是程式碼的錯誤，而是一個必須在 Firebase 網站上完成的專案設定。</p>
+                                                 </div>
+                                             </div>`;
+                    lucide.createIcons();
+                } else {
+                    DOM.loadingState.innerHTML = `<p class="text-red-500">錯誤：無法連接到資料庫。請確認 Firebase 設定是否正確。</p>`;
+                }
                 return; // Stop execution if there's an error
             }
 
             // --- UI and Listeners Setup ---
             setView(currentView);
-            lucide.createIcons(); // Initial call for static icons
+            lucide.createIcons();
 
-            // Listen for real-time updates for supplies
-            if (db) { // Add check for db initialization
-                const suppliesQuery = collection(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION));
-                onSnapshot(suppliesQuery, (snapshot) => {
-                    allSupplies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderInventory();
-                    renderUnsealHistory();
-                }, (error) => {
-                    console.error("讀取庫存資料時發生錯誤:", error);
-                    showToast('讀取庫存資料失敗，請稍後再試', 'error');
-                    if (DOM.inventoryList) DOM.inventoryList.innerHTML = `<p class="text-red-500 text-center">無法載入庫存資料。</p>`; // Add check
-                });
+            // Listen for real-time updates
+            const suppliesQuery = collection(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION));
+            onSnapshot(suppliesQuery, (snapshot) => {
+                allSupplies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderInventory();
+                renderUnsealHistory();
+            }, (error) => {
+                console.error("讀取庫存資料時發生錯誤:", error);
+                showToast('讀取庫存資料失敗，請稍後再試', 'error');
+                // Optionally display a more prominent error message on the page
+                DOM.inventoryList.innerHTML = `<p class="text-red-500 text-center">無法載入庫存資料。</p>`;
+            });
 
-                initializeAndLoadMappings(); // This now loads Firestore mappings
-                listenToMappingLogs(); // Listen to logs
-            }
+            initializeAndLoadMappings(); // This now loads Firestore mappings
+            listenToMappingLogs(); // Listen to logs on page load
 
-            // --- EVENT LISTENERS (Should be safe to setup even if DB fails, check inside handlers) ---
-            if (DOM.viewToggle) DOM.viewToggle.addEventListener('click', (e) => { // Add check
+            // --- EVENT LISTENERS ---
+            DOM.viewToggle.addEventListener('click', (e) => {
                 const button = e.target.closest('button');
-                if(button && button.dataset.view) { // Check dataset exists
+                if(button) {
                     const view = button.dataset.view;
                     setView(view);
                     renderInventory();
                 }
             });
 
-            if (DOM.manageMappingsBtn) DOM.manageMappingsBtn.addEventListener('click', () => openModal(DOM.mappingsModal)); // Add check
-            if (DOM.closeMappingsModalBtn) DOM.closeMappingsModalBtn.addEventListener('click', () => closeModal(DOM.mappingsModal)); // Add check
-            if (DOM.mappingsModal) DOM.mappingsModal.addEventListener('click', (e) => { // Add check
+            DOM.manageMappingsBtn.addEventListener('click', () => {
+                openModal(DOM.mappingsModal);
+                // No need to start log listener here anymore
+            });
+            DOM.closeMappingsModalBtn.addEventListener('click', () => closeModal(DOM.mappingsModal));
+            DOM.mappingsModal.addEventListener('click', (e) => {
                 if (e.target === DOM.mappingsModal) closeModal(DOM.mappingsModal);
             });
 
-            if (DOM.closeAddStockModalBtn) DOM.closeAddStockModalBtn.addEventListener('click', () => closeModal(DOM.addStockModal)); // Add check
-            if (DOM.addStockModal) DOM.addStockModal.addEventListener('click', (e) => { if (e.target === DOM.addStockModal) closeModal(DOM.addStockModal); }); // Add check
+            DOM.closeAddStockModalBtn.addEventListener('click', () => closeModal(DOM.addStockModal));
+            DOM.addStockModal.addEventListener('click', (e) => { if (e.target === DOM.addStockModal) closeModal(DOM.addStockModal); });
 
-            if (DOM.closeEditModalBtn) DOM.closeEditModalBtn.addEventListener('click', () => closeModal(DOM.editItemModal)); // Add check
-            if (DOM.editItemModal) DOM.editItemModal.addEventListener('click', (e) => { if (e.target === DOM.editItemModal) closeModal(DOM.editItemModal); }); // Add check
+            DOM.closeEditModalBtn.addEventListener('click', () => closeModal(DOM.editItemModal));
+            DOM.editItemModal.addEventListener('click', (e) => { if (e.target === DOM.editItemModal) closeModal(DOM.editItemModal); });
 
-            // Add Category button in Modal
-            if (DOM.addModalCategoryBtn) DOM.addModalCategoryBtn.addEventListener('click', async () => { // Add check
+            DOM.addCategoryBtn.addEventListener('click', async () => {
                 const newCategory = prompt('請輸入新的耗材類別(品項)名稱：');
                 if (newCategory && newCategory.trim() !== '') {
                     const trimmedCategory = newCategory.trim();
-                     if (await saveCustomCategory(trimmedCategory)) { // Check success
-                        // Set the newly added category in the dropdown in the mapping modal
-                        if(DOM.newItemCategorySelect) DOM.newItemCategorySelect.value = trimmedCategory; // Add check
-                        showToast(`類別 "${trimmedCategory}" 已新增`);
-                    }
+                    await saveCustomCategory(trimmedCategory);
+                     // Set the newly added category in the dropdown in the mapping modal
+                     DOM.newItemCategorySelect.value = trimmedCategory;
+                    showToast(`類別 "${trimmedCategory}" 已新增`);
                 }
             });
 
-            if (DOM.downloadCsvBtn) DOM.downloadCsvBtn.addEventListener('click', downloadCSV); // Add check
+            DOM.downloadCsvBtn.addEventListener('click', downloadCSV);
 
-            if (DOM.purchaseNumberInput) DOM.purchaseNumberInput.addEventListener('input', (e) => { // Add check
-                 if (!DOM.purchaseNumberFeedback || !DOM.purchaseNumberResults || !DOM.itemNameInput || !DOM.categoryInput) return; // Add checks
-
+            DOM.purchaseNumberInput.addEventListener('input', (e) => {
                 const searchTerm = e.target.value.trim().toLowerCase();
                 const feedbackEl = DOM.purchaseNumberFeedback;
                 const resultsContainer = DOM.purchaseNumberResults;
@@ -1474,7 +1369,9 @@
 
                  // Clear derived fields when input changes
                  DOM.itemNameInput.value = '';
-                 DOM.categoryInput.value = ''; // Clear text input
+                 DOM.categorySelect.value = '';
+                 DOM.categorySelect.disabled = true;
+                 DOM.categorySelect.classList.add('bg-slate-50');
 
                 if (!searchTerm) {
                     resultsContainer.classList.add('hidden');
@@ -1506,18 +1403,16 @@
                 }
             });
 
-            if (DOM.purchaseNumberResults) DOM.purchaseNumberResults.addEventListener('click', (e) => { // Add check
-                 if (!DOM.purchaseNumberInput || !DOM.itemNameInput || !DOM.categoryInput || !DOM.purchaseNumberFeedback) return; // Add checks
-
+            DOM.purchaseNumberResults.addEventListener('click', (e) => {
                 const resultEl = e.target.closest('[data-key]');
-                if (resultEl && resultEl.dataset.key) { // Check dataset exists
+                if (resultEl) {
                     const key = resultEl.dataset.key;
                     const item = purchaseNumberMap[key];
 
                     if (item) { // Ensure item exists in the map
                         DOM.purchaseNumberInput.value = key;
                         DOM.itemNameInput.value = item.name;
-                        DOM.categoryInput.value = item.category; // Set text input value
+                        addCategoryOption(item.category, true); // This will enable and set the category dropdown
 
                         DOM.purchaseNumberResults.classList.add('hidden');
                         DOM.purchaseNumberFeedback.textContent = '';
@@ -1530,47 +1425,55 @@
 
 
             document.addEventListener('click', (e) => {
-                 // Close search results if click outside
-                 if (DOM.purchaseNumberInput && DOM.purchaseNumberResults && !DOM.purchaseNumberInput.contains(e.target) && !DOM.purchaseNumberResults.contains(e.target)) {
+                if (!DOM.purchaseNumberInput.contains(e.target) && !DOM.purchaseNumberResults.contains(e.target)) {
                     DOM.purchaseNumberResults.classList.add('hidden');
                 }
             });
 
-            if (DOM.addMappingForm) DOM.addMappingForm.addEventListener('submit', async (e) => { // Add check
+            DOM.addMappingForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const numInput = document.getElementById('new-purchase-number');
-                const nameInput = document.getElementById('new-item-name');
-                if(!numInput || !nameInput || !DOM.newItemCategorySelect) return; // Add checks
-
-                const number = numInput.value.trim();
-                const name = nameInput.value.trim();
+                const number = document.getElementById('new-purchase-number').value.trim();
+                const name = document.getElementById('new-item-name').value.trim();
                 const category = DOM.newItemCategorySelect.value;
                 if (!number || !name || !category) {
                      showToast('請填寫所有欄位', 'error');
                      return;
                  }
 
+                // Prevent overwriting if not in edit mode and key already exists? Optional.
+                // if (!editingKey && purchaseNumberMap[number]) {
+                //     showToast(`採購編號 "${number}" 已存在`, 'error');
+                //     return;
+                // }
+
                 const oldData = (editingKey && purchaseNumberMap[editingKey]) ?
                          ` (原: ${purchaseNumberMap[editingKey].name}, ${purchaseNumberMap[editingKey].category})` : '';
 
-                 try {
-                    if (editingKey && editingKey !== number) {
-                         const oldDocRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), editingKey);
-                         try {
-                             await deleteDoc(oldDocRef);
-                         } catch (err) {
-                             console.warn("Could not delete old mapping doc:", editingKey, err);
-                         }
-                    }
+                if (editingKey && editingKey !== number) {
+                     // If the key (purchase number) is changed during edit, delete the old one first
+                     const oldDocRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), editingKey);
+                     try {
+                         await deleteDoc(oldDocRef);
+                         // Don't log deletion here, log it as part of the edit
+                     } catch (err) {
+                         console.warn("Could not delete old mapping doc:", editingKey, err);
+                         // Proceed with adding the new one anyway? Or show error?
+                         // Let's proceed but maybe log it more prominently.
+                     }
+                }
 
-                    const docRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), number);
+                const docRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), number);
+                try {
                     await setDoc(docRef, { name, category });
-                    window.lastEditedMappingKey = number; // Flag for highlighting
+                    // Set a flag to highlight this key when list re-renders
+                    window.lastEditedMappingKey = number;
 
                     if (editingKey) {
+                        // Log edit
                         await addMappingLog(`編輯品項: ${number} (新: ${name}, ${category})${oldData}`);
                         cancelEditMode();
                     } else {
+                        // Log add
                         await addMappingLog(`新增品項: ${number} (${name}, ${category})`);
                         DOM.addMappingForm.reset();
                     }
@@ -1583,26 +1486,28 @@
             });
 
 
-            if (DOM.mappingsListContainer) DOM.mappingsListContainer.addEventListener('click', (e) => { // Add check
+            DOM.mappingsListContainer.addEventListener('click', (e) => {
                 const editButton = e.target.closest('.edit-mapping-btn');
                 const deleteButton = e.target.closest('.delete-mapping-btn');
 
-                if (editButton && editButton.dataset.key) { // Check dataset exists
+                if (editButton) {
                     const key = editButton.dataset.key;
                     startEditMode(key);
-                } else if (deleteButton && deleteButton.dataset.key) { // Check dataset exists
+                } else if (deleteButton) {
                     const key = deleteButton.dataset.key;
                     const item = purchaseNumberMap[key]; // Get item details before deleting
                     const itemDetails = item ? `(${item.name}, ${item.category})` : '';
                            showConfirmation(
                                 '確認刪除',
-                                `您確定要刪除品項 "${key}" 嗎？這不會刪除已存在的庫存項目，只會從對照表中移除。`,
+                                `您確定要刪除品項 "${key}" 嗎？這不會刪除已存在的庫存項目，只會從對照表中移除。`, // Clarify deletion scope
                                 async () => {
+                                    const docRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), key);
                                     try {
-                                        const docRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), key);
                                         await deleteDoc(docRef);
+                                        // Log delete
                                         await addMappingLog(`刪除品項: ${key} ${itemDetails}`);
                                         showToast('品項已刪除');
+                                        // If the deleted item was being edited, cancel edit mode
                                         if (editingKey === key) {
                                             cancelEditMode();
                                         }
@@ -1615,28 +1520,16 @@
                 }
             });
 
-            // Setup main form listener
+            // This function is defined below in setup file
             setupFormListener();
-            // Setup modal form listeners
             setupAddStockFormListener();
             setupEditFormListener();
-            // Setup history deletion listener
             setupUnsealHistoryListener();
         }
 
         async function setupFormListener() {
-            const form = document.getElementById('add-item-form');
-            if(!form) return; // Add check
-
-            form.addEventListener('submit', async (e) => {
+            document.getElementById('add-item-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                // Add checks for all DOM elements used inside this handler
-                if (!DOM.purchaseNumberInput || !DOM.purchaseNumberFeedback || !DOM.itemNameInput || !DOM.categoryInput) return;
-                const quantityInput = document.getElementById('item-quantity');
-                const remarksInput = document.getElementById('item-remarks');
-                if(!quantityInput || !remarksInput || !DOM.itemPurchaseDate) return;
-
-
                 const purchaseNumber = DOM.purchaseNumberInput.value.trim();
                 if (!purchaseNumber) {
                     showToast('請先選擇或輸入一個有效的採購編號', 'error');
@@ -1645,19 +1538,22 @@
                 }
 
                 const name = DOM.itemNameInput.value.trim();
+                 // Check if name was derived from selection, if not, maybe error?
                  if (!name) {
                      showToast('無法自動帶入耗材名稱，請確認採購編號是否正確或已在品項管理中建立', 'error');
                      return;
                  }
 
 
-                const category = DOM.categoryInput.value.trim(); // Read from text input
+                // Ensure category is selected or derived correctly
+                const category = DOM.categorySelect.value;
                  if (!category) {
-                     showToast('請輸入耗材類別', 'error');
+                     showToast('請選擇耗材類別', 'error');
                      return;
                  }
 
 
+                const quantityInput = document.getElementById('item-quantity');
                 const quantity = parseInt(quantityInput.value, 10);
                  if (isNaN(quantity) || quantity < 0) {
                      showToast('請輸入有效的庫存數量 (必須是非負整數)', 'error');
@@ -1667,7 +1563,7 @@
 
 
                 const purchaseDate = DOM.itemPurchaseDate.value;
-                const remarks = remarksInput.value.trim();
+                const remarks = document.getElementById('item-remarks').value.trim();
 
                 // Find existing item directly from `allSupplies` state which is updated by onSnapshot
                 const existingItem = allSupplies.find(item => item.id === purchaseNumber);
@@ -1678,6 +1574,7 @@
                     if (existingItem) {
                         // Item exists, update it by adding stock
                         const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), purchaseNumber);
+                        const newQuantity = existingItem.quantity + quantity; // Not used for update, just for logic/history
                         const historyEntry = { date: finalPurchaseDate, quantity, type: 'restock' };
                         const updatedInboundHistory = [...(existingItem.inboundHistory || []), historyEntry];
 
@@ -1701,7 +1598,7 @@
                              category,
                              quantity,
                              lastPurchaseDate: finalPurchaseDate,
-                             purchaseStatus: purchaseNumberMap[purchaseNumber]?.purchaseStatus || '', // Try to get status from map if exists, else empty
+                             purchaseStatus: '', // Default empty status
                              remarks: remarks,
                              usageHistory: [], // Initialize as empty array
                              inboundHistory: [{ date: finalPurchaseDate, quantity, type: 'initial_add' }],
@@ -1712,10 +1609,12 @@
                     }
 
                     // Reset the form regardless of add/update
-                    form.reset();
-                    // Clear fields derived from lookup
+                    document.getElementById('add-item-form').reset();
+                    // Clear fields derived from lookup and disable category again
                      DOM.itemNameInput.value = '';
-                     DOM.categoryInput.value = ''; // Clear text input too
+                     DOM.categorySelect.value = '';
+                     DOM.categorySelect.disabled = true;
+                     DOM.categorySelect.classList.add('bg-slate-50');
                      DOM.purchaseNumberFeedback.textContent = '';
 
 
@@ -1726,11 +1625,7 @@
             });
         }
 
-         // --- Initialize Login ---
-         handleLogin();
-         // main() is now called inside handleLogin after success
-
-
+        main();
     </script>
 </body>
 </html>
