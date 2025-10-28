@@ -3,1025 +3,1735 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲端庫存儀表板 (支援QR Code)</title>
+    <title>庫存管理系統</title>
+    <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 載入 QR Code 產生器 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 引入 Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- 引入 Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <style>
         body {
             font-family: 'Inter', 'Noto Sans TC', sans-serif;
-            background-color: #f8fafc; /* light blue-gray background (slate-50) */
-            color: #1e293b; /* dark slate gray text (slate-900) */
+            background-color: #f8fafc; /* slate-50 */
         }
-        /* ... (其餘樣式保持不變) ... */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-        .modal-fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        .kpi-card {
-            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-            background-color: #ffffff; border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-            border-radius: 0.75rem;
+        .btn-action {
+            transition: transform 0.1s ease-in-out, box-shadow 0.2s ease, background-color 0.2s ease;
         }
-        .kpi-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        .btn-action:hover:not(:disabled) {
+            box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39);
         }
-        input:focus, textarea:focus {
-            outline: none !important;
-            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.4) !important;
-            border-color: #60a5fa !important;
+        .btn-action:active:not(:disabled) {
+            transform: scale(0.95);
         }
-        .btn-primary { transition: background-color 0.2s ease-out, transform 0.1s ease-out; }
-        .btn-primary:hover { transform: translateY(-1px); }
-        .btn-primary:active { transform: translateY(0); }
-        #qr-code-canvas {
-            width: 256px !important; height: 256px !important;
-            margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 0.5rem;
+        .btn-action:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
         }
-        /* 全局載入畫面 */
-        #global-loader {
-            position: fixed;
-            inset: 0;
-            background-color: rgba(248, 250, 252, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            backdrop-filter: blur(4px);
+        .modal-backdrop {
+            transition: opacity 0.3s ease;
         }
-        .spinner {
-            width: 56px;
-            height: 56px;
-            border: 6px solid #e2e8f0;
-            border-bottom-color: #3b82f6; /* Blue-500 */
-            border-radius: 50%;
-            display: inline-block;
-            box-sizing: border-box;
-            animation: rotation 1s linear infinite;
+        .modal-content {
+            transition: transform 0.3s ease, opacity 0.3s ease;
         }
-        @keyframes rotation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(50%) sepia(10%) saturate(200%) hue-rotate(180deg) brightness(95%) contrast(90%);
         }
-        /* Firebase 錯誤/提示訊息 */
-        #firebase-error-banner {
-            background-color: #ffedd5; /* orange-100 */
-            color: #c2410c; /* orange-700 */
-            border: 1px solid #fed7aa; /* orange-300 */
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin: 1rem auto;
-            max-width: 7xl;
-            display: none; /* 預設隱藏 */
+        .table-striped tbody tr:nth-child(odd) { background-color: #f9fafb; }
+        .table-striped tbody tr:hover { background-color: #f1f5f9; }
+        .row-disabled {
+            background-color: #f1f5f9 !important; /* slate-200 */
+            color: #64748b; /* slate-500 */
         }
+        .row-disabled:hover {
+             background-color: #e2e8f0 !important; /* slate-300 */
+        }
+
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes toast-in {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes toast-out {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100%); opacity: 0; }
+        }
+        .toast.show { animation: toast-in 0.3s ease-out forwards; }
+        .toast.hide { animation: toast-out 0.3s ease-in forwards; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="min-h-screen antialiased">
 
-    <!-- 全局載入畫面 (預設隱藏) -->
-    <div id="global-loader" class="hidden">
-        <div class="text-center">
-            <div class="spinner"></div>
-            <p id="loader-text" class="text-slate-600 mt-4">正在連接雲端資料庫...</p>
-        </div>
-    </div>
-
-    <!-- Firebase 錯誤/提示訊息橫幅 -->
-    <div id="firebase-error-banner">
-        <h3 class="font-bold">提示</h3>
-        <p>請點擊右上角的「⚙️ 設定」按鈕，貼上您的 Firebase 設定檔 (Config JSON) 以啟用雲端功能。</p>
-    </div>
-
-    <!-- 主要儀表板容器 (預設顯示) -->
-    <div id="main-dashboard-container" class="max-w-7xl mx-auto">
-        <!-- 頁面標題 --><header class="mb-8 flex justify-between items-center">
-            <div>
-                <h1 class="text-4xl font-extrabold text-slate-900">雲端庫存儀表板</h1>
-                <p class="text-slate-600 mt-2">即時追蹤您的商品庫存狀態與出入庫動態。</p>
-            </div>
-            <!-- 新增設定按鈕 -->
-            <button id="settings-btn" class="bg-slate-200 text-slate-700 p-3 rounded-full hover:bg-slate-300 transition-colors" title="設定 Firebase">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-            </button>
-        </header>
-
-        <!-- 頂部統計卡片 --><section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <!-- 總庫存量 --><div class="kpi-card p-6 flex items-center space-x-4">
-                <div class="p-3 rounded-full bg-green-100 text-green-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v-1m0 1v1m0-1H8m4 0h4m-4 1v1m0-1H8m4 0h4m-4 1v1m0-1H8m4 0h4m1.93 12.07l-3-3-3 3-3-3-3 3-3-3 3-3 3 3 3-3 3 3z"/></svg>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-slate-500">總庫存量</p>
-                    <div id="total-stock" class="text-3xl font-bold text-slate-900">0</div>
-                </div>
-            </div>
-            <!-- 庫存品項 --><div class="kpi-card p-6 flex items-center space-x-4">
-                <div class="p-3 rounded-full bg-sky-100 text-sky-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-slate-500">庫存品項</p>
-                    <div id="total-items" class="text-3xl font-bold text-slate-900">0</div>
-                </div>
-            </div>
-            <!-- 低庫存警示 --><div class="kpi-card p-6 flex items-center space-x-4">
-                <div class="p-3 rounded-full bg-red-100 text-red-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-slate-500">低庫存警示</p>
-                    <div id="low-stock-alerts" class="text-3xl font-bold text-red-600">0</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 新增商品表單 --><section class="bg-white p-6 rounded-xl shadow-sm mb-8 border border-slate-200">
-            <h2 class="text-xl font-bold text-slate-800 mb-4">新增商品資料</h2>
-            <form id="add-product-form" class="grid grid-cols-1 md:grid-cols-6 gap-4">
-                <input type="text" id="add-name" placeholder="商品名稱" class="col-span-1 md:col-span-2 bg-white text-slate-900 border border-slate-300 rounded-lg p-3" required>
-                <input type="text" id="add-category" placeholder="商品分類" class="col-span-1 md:col-span-1 bg-white text-slate-900 border border-slate-300 rounded-lg p-3" required>
-                <input type="number" id="add-stock" placeholder="庫存量" class="col-span-1 md:col-span-1 bg-white text-slate-900 border border-slate-300 rounded-lg p-3" required>
-                <input type="text" id="add-ponumber" placeholder="採購編號" class="col-span-1 md:col-span-1 bg-white text-slate-900 border border-slate-300 rounded-lg p-3" required>
-                <input type="date" id="add-date" placeholder="入庫日期" class="col-span-1 md:col-span-1 bg-white text-slate-900 border border-slate-300 rounded-lg p-3" required>
-                <textarea id="add-remarks" placeholder="備註 (選填)" class="col-span-1 md:col-span-6 bg-white text-slate-900 border border-slate-300 rounded-lg p-3" rows="2"></textarea>
-                <button type="submit" class="col-span-1 md:col-span-6 bg-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors btn-primary">
-                    新增商品
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="fixed inset-0 bg-slate-100 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm text-center">
+            <i data-lucide="lock" class="mx-auto h-12 w-12 text-indigo-500 mb-4"></i>
+            <h2 class="text-2xl font-bold text-slate-800 mb-4">請輸入密碼</h2>
+            <form id="login-form">
+                <input type="password" id="password-input" required class="w-full px-4 py-2 border border-slate-300 rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 transition" placeholder="密碼">
+                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2.5 px-4 rounded-lg hover:bg-indigo-700 transition-colors btn-action">
+                    登入
                 </button>
-            </form>
-        </section>
-
-        <main>
-            <!-- 庫存列表格線 --><div id="inventory-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <!-- 庫存項目卡片會由 JavaScript 動態插入到這裡 --></div>
-        </main>
-
-        <!-- 出庫紀錄區塊 --><section class="bg-white p-6 rounded-xl shadow-sm mt-8 border border-slate-200">
-            <h2 class="text-xl font-bold text-slate-800 mb-4">出庫紀錄</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-200">
-                    <thead class="bg-slate-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">時間</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">商品名稱</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">採購編號</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">出庫數量</th>
-                        </tr>
-                    </thead>
-                    <tbody id="outbound-log-body" class="bg-white divide-y divide-slate-200">
-                        <!-- 紀錄會由 JavaScript 動態插入到這裡 --></tbody>
-                </table>
-            </div>
-        </section>
-
-    </div> <!-- max-w-7xl end -->
-
-    <!-- 快速出庫頁面容器 -->
-    <div id="quick-outbound-container" class="hidden max-w-md mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg border border-slate-200">
-        <h2 class="text-2xl font-bold text-slate-900 text-center mb-4">快速出庫</h2>
-        <div id="quick-outbound-loading" class="text-center text-slate-500">
-            正在讀取商品資料...
-        </div>
-        <div id="quick-outbound-content" class="hidden space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-slate-500">商品名稱</label>
-                <p id="quick-outbound-name" class="text-xl font-semibold text-slate-900"></p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-500">目前庫存</label>
-                <p id="quick-outbound-stock" class="text-xl font-semibold text-slate-900"></p>
-            </div>
-            <button id="quick-outbound-button" class="w-full bg-blue-500 text-white font-bold py-4 px-4 rounded-lg hover:bg-blue-600 transition-colors btn-primary text-lg">
-                確認出庫 (-1)
-            </button>
-            <div id="quick-outbound-message" class="text-center text-green-600 font-medium hidden"></div>
-            <a href="inventory-dashboard.html" class="block text-center text-sm text-blue-600 hover:underline mt-4">返回主儀表板</a>
-        </div>
-    </div>
-
-
-    <!-- 編輯商品 彈出視窗 (Modal) --><div id="edit-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white modal-fade-in border-slate-200">
-            <h3 class="text-2xl font-bold text-slate-900 mb-5">編輯商品</h3>
-            <form id="edit-form">
-                <input type="hidden" id="edit-id">
-                <div class="space-y-4">
-                    <div>
-                        <label for="edit-name" class="block text-sm font-medium text-slate-700">商品名稱</label>
-                        <input type="text" id="edit-name" class="mt-1 block w-full bg-white text-slate-900 border border-slate-300 rounded-lg p-3" required>
-                    </div>
-                    <div>
-                        <label for="edit-category" class="block text-sm font-medium text-slate-700">商品分類</label>
-                        <input type="text" id="edit-category" class="mt-1 block w-full bg-white text-slate-900 border border-slate-300 rounded-lg p-3" required>
-                    </div>
-                    <div>
-                        <label for="edit-stock" class="block text-sm font-medium text-slate-700">庫存量</label>
-                        <input type="number" id="edit-stock" class="mt-1 block w-full bg-white text-slate-900 border border-slate-300 rounded-lg p-3" required>
-                    </div>
-                    <div>
-                        <label for="edit-ponumber" class="block text-sm font-medium text-slate-700">採購編號</label>
-                        <input type="text" id="edit-ponumber" class="mt-1 block w-full bg-white text-slate-900 border border-slate-300 rounded-lg p-3" required>
-                    </div>
-                    <div>
-                        <label for="edit-date" class="block text-sm font-medium text-slate-700">入庫日期</label>
-                        <input type="date" id="edit-date" class="mt-1 block w-full bg-white text-slate-900 border border-slate-300 rounded-lg p-3" required>
-                    </div>
-                    <div>
-                        <label for="edit-remarks" class="block text-sm font-medium text-slate-700">備註 (選填)</label>
-                        <textarea id="edit-remarks" class="mt-1 block w-full bg-white text-slate-900 border border-slate-300 rounded-lg p-3" rows="3"></textarea>
-                    </div>
-                </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" id="cancel-edit" class="bg-slate-200 text-slate-800 font-bold py-2 px-6 rounded-lg hover:bg-slate-300 transition-colors btn-primary">
-                        取消
-                    </button>
-                    <button type="submit" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors btn-primary">
-                        儲存變更
-                    </button>
-                </div>
+                <p id="login-error" class="text-red-500 text-sm mt-3 h-4"></p>
             </form>
         </div>
     </div>
 
-    <!-- 出庫 彈出視窗 (Modal) --><div id="outbound-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-xl bg-white modal-fade-in border-slate-200">
-            <h3 class="text-2xl font-bold text-slate-900 mb-5">商品出庫</h3>
-            <form id="outbound-form">
-                <input type="hidden" id="outbound-id">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700">商品名稱</label>
-                        <p id="outbound-name" class="text-lg font-semibold text-slate-900 mt-1"></p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700">目前庫存</label>
-                        <p id="outbound-current-stock" class="text-lg font-semibold text-slate-900 mt-1"></p>
-                    </div>
-                    <div>
-                        <label for="outbound-quantity" class="block text-sm font-medium text-slate-700">出庫數量</label>
-                        <input type="number" id="outbound-quantity" class="mt-1 block w-full bg-white text-slate-900 border border-slate-300 rounded-lg p-3" required min="1">
-                        <p id="outbound-error" class="text-red-600 text-sm mt-1 hidden"></p>
-                    </div>
-                </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" id="cancel-outbound" class="bg-slate-200 text-slate-800 font-bold py-2 px-6 rounded-lg hover:bg-slate-300 transition-colors btn-primary">
-                        取消
-                    </button>
-                    <button type="submit" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors btn-primary">
-                        確認出庫
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <!-- Main App Content (Initially Hidden) -->
+    <div id="app-content" class="hidden">
+        <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+            <!-- 應用程式標題 -->
+            <header class="text-center mb-12">
+                <h1 class="text-4xl sm:text-5xl font-bold text-slate-800 flex justify-center items-center">
+                    <i data-lucide="package-search" class="w-10 h-10 mr-4 text-indigo-600"></i>庫存管理系統
+                </h1>
+            </header>
 
-    <!-- QR Code 產生 彈出視窗 (Modal) --><div id="qr-code-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-6 border w-full max-w-sm shadow-lg rounded-xl bg-white modal-fade-in border-slate-200">
-            <h3 id="qr-code-title" class="text-xl font-bold text-slate-900 mb-4 text-center"></h3>
-            <p class="text-center text-slate-600 text-sm mb-4">請掃描此 QR Code 進行快速出庫</p>
-            <div id="qr-code-canvas-container"></div>
-            <div class="mt-6 text-center">
-                <button type="button" id="cancel-qr-code" class="bg-slate-200 text-slate-800 font-bold py-2 px-6 rounded-lg hover:bg-slate-300 transition-colors btn-primary">
-                    關閉
-                </button>
+            <!-- 新增耗材表單 -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg mb-10">
+                <div class="flex justify-between items-center mb-5 border-b border-slate-200 pb-4">
+                    <h2 class="text-xl font-semibold text-slate-700 flex items-center">
+                        <i data-lucide="plus-circle" class="mr-2 text-indigo-500"></i>新增耗材
+                    </h2>
+                    <div class="flex items-center space-x-2">
+                        <button id="download-csv-btn" class="text-sm bg-green-100 text-green-700 font-semibold py-2 px-4 rounded-lg hover:bg-green-200 transition-colors flex items-center">
+                            <i data-lucide="download" class="w-4 h-4 mr-2"></i>下載庫存報表
+                        </button>
+                        <button id="manage-mappings-btn" class="text-sm bg-slate-100 text-slate-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors flex items-center">
+                            <i data-lucide="settings-2" class="w-4 h-4 mr-2"></i>管理品項
+                        </button>
+                    </div>
+                </div>
+                <form id="add-item-form" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="relative">
+                        <label for="item-purchase-number" class="block text-sm font-medium text-slate-600 mb-1">採購編號 (可搜尋關鍵字)</label>
+                        <input type="text" id="item-purchase-number" placeholder="輸入編號、名稱或品項關鍵字" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" autocomplete="off">
+                        <div id="purchase-number-feedback" class="text-sm text-red-500 mt-1 h-4"></div>
+                        <div id="purchase-number-results" class="absolute z-10 w-full bg-white border border-slate-300 rounded-md mt-1 max-h-60 overflow-y-auto hidden shadow-lg custom-scrollbar"></div>
+                    </div>
+                    <div>
+                        <label for="item-name" class="block text-sm font-medium text-slate-600 mb-1">耗材名稱</label>
+                        <input type="text" id="item-name" placeholder="將自動帶入" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition bg-slate-50" readonly>
+                    </div>
+                    <div>
+                        <label for="item-category" class="block text-sm font-medium text-slate-600 mb-1">耗材類別</label>
+                        <input type="text" id="item-category" placeholder="輸入或自動帶入類別" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        <!-- Removed Add Category Button -->
+                    </div>
+                    <div>
+                        <label for="item-purchase-date" class="block text-sm font-medium text-slate-600 mb-1">進貨日期</label>
+                        <input type="date" id="item-purchase-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    </div>
+                    <div>
+                        <label for="item-quantity" class="block text-sm font-medium text-slate-600 mb-1">目前庫存</label>
+                        <input type="number" id="item-quantity" value="1" min="0" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    </div>
+                     <div>
+                        <label for="item-remarks" class="block text-sm font-medium text-slate-600 mb-1">備註</label>
+                        <textarea id="item-remarks" rows="1" placeholder="新增備註..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors btn-action flex items-center justify-center">
+                            <i data-lucide="plus" class="w-5 h-5 mr-2"></i> 新增至庫存
+                        </button>
+                    </div>
+                </form>
             </div>
+
+            <!-- 庫存清單 -->
+            <div id="inventory-container">
+                 <div id="loading-state" class="text-center py-10">
+                     <div class="flex justify-center items-center space-x-2">
+                         <svg class="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                         </svg>
+                         <p class="text-slate-500">正在連接資料庫...</p>
+                     </div>
+                 </div>
+                 <!-- 庫存總覽 -->
+                 <div id="inventory-list-section" class="hidden">
+                     <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                         <h2 class="text-2xl font-bold text-slate-800">庫存總覽</h2>
+                         <div id="view-toggle" class="flex items-center rounded-lg bg-slate-200 p-1 self-start sm:self-center">
+                             <button data-view="card" class="p-2 rounded-md transition-colors" title="卡片視圖"><i data-lucide="layout-grid" class="w-5 h-5 pointer-events-none"></i></button>
+                             <button data-view="table" class="p-2 rounded-md transition-colors" title="表格視圖"><i data-lucide="list" class="w-5 h-5 pointer-events-none"></i></button>
+                         </div>
+                     </div>
+                     <div id="inventory-list" class="space-y-4"></div>
+                 </div>
+
+                 <!-- 拆封紀錄 -->
+                 <div id="unseal-history-section" class="mt-12 hidden">
+                     <h3 class="text-xl font-semibold text-slate-700 mb-4 border-b-2 border-slate-200 pb-2 flex items-center">
+                         <i data-lucide="history" class="mr-3 text-slate-500"></i>最近拆封紀錄
+                     </h3>
+                     <div id="unseal-history-list" class="space-y-2 bg-white p-4 rounded-xl shadow-md">
+                         <!-- History items will be injected here -->
+                     </div>
+                 </div>
+
+            </div> <!-- This is the end of inventory-container -->
+
+            <!-- New Log Section Moved Here -->
+            <div id="mappings-log-container" class="mt-12 hidden">
+                <h3 class="text-xl font-semibold text-slate-700 mb-4 border-b-2 border-slate-200 pb-2 flex items-center">
+                    <i data-lucide="clipboard-list" class="mr-3 text-slate-500"></i>紀錄
+                </h3>
+                <div id="mappings-log-list" class="max-h-60 overflow-y-auto space-y-2 pr-2 custom-scrollbar text-sm text-slate-600 bg-white p-4 rounded-xl shadow-md">
+                    <p class="text-slate-400">正在載入紀錄...</p>
+                </div>
+            </div>
+            <!-- End New Log Section -->
+
+        </div> <!-- This is the end of div.container -->
+    </div> <!-- This is the end of #app-content -->
+
+    <!-- Modals -->
+    <div id="mappings-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden opacity-0 z-50">
+        <div class="modal-content bg-white w-full max-w-2xl p-6 rounded-2xl shadow-lg opacity-0 transform -translate-y-10">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-slate-800">管理品項對照表</h3>
+                <button id="close-mappings-modal-btn" class="text-slate-400 hover:text-slate-800"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="mb-6 bg-slate-50 p-4 rounded-lg">
+                <h4 id="mapping-form-title" class="font-semibold text-slate-700 mb-2">新增對照品項</h4>
+                <form id="add-mapping-form" class="space-y-3">
+                    <div>
+                        <label for="new-purchase-number" class="text-sm font-medium text-slate-600">採購編號</label>
+                        <input type="text" id="new-purchase-number" placeholder="請輸入採購編號" required class="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
+                    </div>
+                    <div>
+                        <label for="new-item-name" class="text-sm font-medium text-slate-600">耗材名稱</label>
+                        <input type="text" id="new-item-name" placeholder="請輸入對應的耗材名稱" required class="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                             <label for="new-item-category" class="text-sm font-medium text-slate-600">耗材類別 (品項)</label>
+                             <button type="button" id="add-modal-category-btn" class="text-indigo-600 hover:text-indigo-800 font-bold mb-1 rounded-full w-6 h-6 flex items-center justify-center bg-indigo-100 hover:bg-indigo-200 transition-colors" title="新增類別">+</button>
+                        </div>
+                        <select id="new-item-category" required class="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition bg-white"></select>
+                    </div>
+                    <div id="mapping-form-buttons" class="!mt-4 space-y-2">
+                        <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors btn-action">儲存品項</button>
+                    </div>
+                </form>
+            </div>
+            <div id="mappings-list-container" class="max-h-80 overflow-y-auto space-y-4 pr-2 custom-scrollbar"></div>
+
+            <!-- New Log Section - REMOVED FROM HERE -->
+
         </div>
     </div>
 
-    <!-- *** 新增：Firebase 設定彈出視窗 *** -->
-    <div id="settings-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white modal-fade-in border-slate-200">
-            <h3 class="text-2xl font-bold text-slate-900 mb-5">Firebase 設定</h3>
-            <form id="settings-form">
-                <div class="space-y-4">
-                    <div>
-                        <label for="firebase-config-input" class="block text-sm font-medium text-slate-700">Firebase 設定 (Config JSON)</label>
-                        <p class="text-xs text-slate-500 mb-2">請從您的 Firebase 專案設定中，複製 'firebaseConfig' 物件的內容並貼於下方。</p>
-                        <textarea id="firebase-config-input" class="mt-1 block w-full bg-white text-slate-900 border border-slate-300 rounded-lg p-3 font-mono text-sm" rows="10" placeholder="{
-   apiKey: "AIzaSyD1Mo73znKs93FiyaXVCnKERAaWzSk_WFY",
-            authDomain: "epson9000-9bcf2.firebaseapp.com",
-            projectId: "epson9000-9bcf2",
-            storageBucket: "epson9000-9bcf2.firebasestorage.app",
-            messagingSenderId: "681687390935",
-            appId: "1:681687390935:web:563c063abd00054fc06e92"
-}"></textarea>
-                        <p id="settings-error" class="text-red-600 text-sm mt-1 hidden"></p>
-                    </div>
+    <div id="add-stock-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden opacity-0 z-50">
+         <div class="modal-content bg-white w-full max-w-md p-6 rounded-2xl shadow-lg opacity-0 transform -translate-y-10">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-slate-800">添加入庫紀錄</h3>
+                <button id="close-add-stock-modal-btn" class="text-slate-400 hover:text-slate-800"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <form id="add-stock-form" class="space-y-4">
+                <div>
+                    <label for="add-stock-date" class="block text-sm font-medium text-slate-600 mb-1">入庫日期</label>
+                    <input type="date" id="add-stock-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
                 </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" id="cancel-settings" class="bg-slate-200 text-slate-800 font-bold py-2 px-6 rounded-lg hover:bg-slate-300 transition-colors btn-primary">
-                        取消
-                    </button>
-                    <button type="submit" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-600 transition-colors btn-primary">
-                        儲存並重載
-                    </button>
+                <div>
+                    <label for="add-stock-quantity" class="block text-sm font-medium text-slate-600 mb-1">入庫數量</label>
+                    <input type="number" id="add-stock-quantity" min="1" value="1" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
+                </div>
+                <div class="!mt-6">
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2.5 px-4 rounded-lg hover:bg-indigo-700 transition-colors btn-action">確認入庫</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <div id="edit-item-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden opacity-0 z-50">
+         <div class="modal-content bg-white w-full max-w-lg p-6 rounded-2xl shadow-lg opacity-0 transform -translate-y-10">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-slate-800">編輯庫存項目</h3>
+                <button id="close-edit-modal-btn" class="text-slate-400 hover:text-slate-800"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <form id="edit-item-form" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit-last-purchase-date" class="block text-sm font-medium text-slate-600 mb-1">最近入庫日期</label>
+                        <input type="date" id="edit-last-purchase-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
+                    </div>
+                    <div>
+                        <label for="edit-quantity" class="block text-sm font-medium text-slate-600 mb-1">總庫存</label>
+                        <input type="number" id="edit-quantity" min="0" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
+                    </div>
+                     <div>
+                        <label for="edit-purchase-status" class="block text-sm font-medium text-slate-600 mb-1">財編狀態</label>
+                        <input type="text" id="edit-purchase-status" placeholder="例如: P2025-001" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
+                    </div>
+                </div>
+                <div class="sm:col-span-2">
+                    <label for="edit-remarks" class="block text-sm font-medium text-slate-600 mb-1">備註</label>
+                    <textarea id="edit-remarks" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition"></textarea>
+                </div>
+                <div class="!mt-6">
+                    <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2.5 px-4 rounded-lg hover:bg-green-700 transition-colors btn-action">更新庫存</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-<!-- 
-  *** Firebase 導入 ***
-  我們將使用 Firebase v11.6.1 
--->
-<script type="module">
-    // 導入 Firebase 模組
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { 
-        getAuth, 
-        signInAnonymously, 
-        onAuthStateChanged 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { 
-        getFirestore, 
-        doc, 
-        getDoc, 
-        addDoc, 
-        setDoc, 
-        updateDoc, 
-        deleteDoc, 
-        onSnapshot, 
-        collection, 
-        query, 
-        serverTimestamp,
-        Timestamp
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+     <div id="confirmation-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden opacity-0 z-50">
+         <div class="modal-content bg-white w-full max-w-sm p-6 rounded-2xl shadow-lg opacity-0 transform -translate-y-10 text-center">
+             <div id="confirmation-icon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                 <i data-lucide="alert-triangle" class="h-6 w-6 text-red-600"></i>
+             </div>
+             <h3 id="confirmation-title" class="text-lg font-semibold text-slate-800 mb-2"></h3>
+             <p id="confirmation-message" class="text-slate-600 mb-6"></p>
+             <div class="flex justify-center gap-4">
+                 <button id="cancel-confirmation-btn" class="w-full bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">取消</button>
+                 <button id="confirm-btn" class="w-full bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">確認</button>
+             </div>
+         </div>
+     </div>
 
-    // --- 1. 初始化變數 ---
-    
-    // **移除：__app_id, __firebase_config, __initial_auth_token**
-    
-    let app, auth, db, userId;
-    let inventoryCollectionRef, outboundLogCollectionRef;
-    
-    //  DOM 元素
-    const globalLoader = document.getElementById('global-loader');
-    const loaderText = document.getElementById('loader-text');
-    const errorBanner = document.getElementById('firebase-error-banner');
-    const mainDashboard = document.getElementById('main-dashboard-container');
-    const quickOutboundContainer = document.getElementById('quick-outbound-container');
-    
-    // 設定 Modal DOM
-    const settingsBtn = document.getElementById('settings-btn');
-    const settingsModal = document.getElementById('settings-modal');
-    const settingsForm = document.getElementById('settings-form');
-    const cancelSettingsBtn = document.getElementById('cancel-settings');
-    const configInput = document.getElementById('firebase-config-input');
-    const settingsError = document.getElementById('settings-error');
 
-    // App ID (我們仍然需要這個來隔離不同 App 的資料)
-    // 這裡我們用一個固定的 App ID，或者也可以讓用戶輸入
-    const appId = 'my-inventory-app-001'; // 給定一個固定的 ID
-    
-    // --- 2. 設定 Modal 邏輯 ---
-    settingsBtn.addEventListener('click', () => {
-        const configStr = localStorage.getItem('firebaseConfig');
-        if (configStr) {
-            configInput.value = JSON.stringify(JSON.parse(configStr), null, 4); // 格式化顯示
+    <!-- Toast Notification -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[100]"></div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import {
+            getFirestore, collection, onSnapshot, doc, getDocs,
+            setDoc, updateDoc, deleteDoc, writeBatch, query, limit,
+            addDoc, orderBy, increment // Added increment
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- CONSTANTS ---
+        const CONSTANTS = {
+            MAPPINGS_COLLECTION: `mappings`,
+            CUSTOM_CATEGORIES_COLLECTION: `custom_categories`,
+            SUPPLIES_COLLECTION: `supplies`,
+            MAPPING_LOGS_COLLECTION: `mapping_logs`, // New
+            VIEW_MODE_KEY: `inventory_view_${getAppId()}`,
+            INK_LOW_STOCK_THRESHOLD: 2,
+            OTHER_LOW_STOCK_THRESHOLD: 3,
+            PASSWORD: "0" // Temporary password
+        };
+
+        // Removed embedded CSV data
+        const csvData = ``; // Empty string
+
+        // --- DOM Elements ---
+        const DOM = {
+            loginOverlay: document.getElementById('login-overlay'),
+            loginForm: document.getElementById('login-form'),
+            passwordInput: document.getElementById('password-input'),
+            loginError: document.getElementById('login-error'),
+            appContent: document.getElementById('app-content'),
+            inventoryContainer: document.getElementById('inventory-container'),
+            loadingState: document.getElementById('loading-state'),
+            inventoryList: document.getElementById('inventory-list'),
+            inventoryListSection: document.getElementById('inventory-list-section'),
+            purchaseNumberInput: document.getElementById('item-purchase-number'),
+            itemNameInput: document.getElementById('item-name'),
+            categoryInput: document.getElementById('item-category'), // Changed from categorySelect
+            // addCategoryBtn: document.getElementById('add-category-btn'), // Removed button from main form
+            itemPurchaseDate: document.getElementById('item-purchase-date'),
+            manageMappingsBtn: document.getElementById('manage-mappings-btn'),
+            mappingsModal: document.getElementById('mappings-modal'),
+            closeMappingsModalBtn: document.getElementById('close-mappings-modal-btn'),
+            addMappingForm: document.getElementById('add-mapping-form'),
+            mappingsListContainer: document.getElementById('mappings-list-container'),
+            newItemCategorySelect: document.getElementById('new-item-category'),
+            addModalCategoryBtn: document.getElementById('add-modal-category-btn'), // Added ID for modal button
+            purchaseNumberFeedback: document.getElementById('purchase-number-feedback'),
+            purchaseNumberResults: document.getElementById('purchase-number-results'),
+            mappingFormTitle: document.getElementById('mapping-form-title'),
+            mappingFormButtons: document.getElementById('mapping-form-buttons'),
+            viewToggle: document.getElementById('view-toggle'),
+            addStockModal: document.getElementById('add-stock-modal'),
+            closeAddStockModalBtn: document.getElementById('close-add-stock-modal-btn'),
+            addStockForm: document.getElementById('add-stock-form'),
+            editItemModal: document.getElementById('edit-item-modal'),
+            closeEditModalBtn: document.getElementById('close-edit-modal-btn'),
+            editItemForm: document.getElementById('edit-item-form'),
+            confirmationModal: document.getElementById('confirmation-modal'),
+            unsealHistorySection: document.getElementById('unseal-history-section'),
+            unsealHistoryList: document.getElementById('unseal-history-list'),
+            downloadCsvBtn: document.getElementById('download-csv-btn'),
+        };
+
+        // --- State ---
+        let db;
+        let auth;
+        let userId;
+        let allSupplies = [];
+        let purchaseNumberMap = {};
+        let editingKey = null;
+        let currentView = localStorage.getItem(CONSTANTS.VIEW_MODE_KEY) || 'card';
+        let currentlyEditingItemId = null;
+        let mappingLogUnsubscribe = null; // New listener handle
+
+        const majorCategoryMap = {
+             '90薄布': '滾筒布', '110薄布': '滾筒布', '60薄布(停用)': '滾筒布', '90薄布(停用)': '滾筒布', '110薄布(停用)': '滾筒布', '90厚布': '滾筒布', '110厚布': '滾筒布', '60厚布(停用)': '滾筒布',
+            '90海報紙': '滾筒紙', '110海報紙': '滾筒紙', '90專用紙': '滾筒紙', '90專用紙(新材編)': '滾筒紙', '110專用紙': '滾筒紙', '90銅板打樣紙': '滾筒紙', '90背膠亮面相紙': '滾筒紙', '90自黏白霧面': '滾筒紙', '90原廠相紙': '滾筒紙', '110原廠相紙': '滾筒紙', '90海報紙(停用)': '滾筒紙', '110海報紙(停用)': '滾筒紙',
+            'T8041亮光黑/PK': '墨水匣', 'T8042藍色/C': '墨水匣', 'T8043靚紅色/VM': '墨水匣', 'T8044黃色/Y': '墨水匣', 'T8045淡藍色/LC': '墨水匣', 'T8046淡靚紅色/VLM': '墨水匣', 'T8047淡黑色/LK': '墨水匣', 'T8048消光黑/MK': '墨水匣', 'T8049超淡黑/LLK': '墨水匣', 'T804A橘色/OR': '墨水匣', 'T804B綠色/GR': '墨水匣',
+            '捲筒配接器': '其他', '墨水收集槽': '其他'
+        };
+
+        // --- Helper Functions ---
+        function getAppId() {
+            // For GitHub deployment, use a fixed App ID.
+            // This ensures all users on your GitHub Pages site share the same database.
+            return 'epson9000-inventory-app-github';
         }
-        settingsModal.classList.remove('hidden');
-    });
 
-    cancelSettingsBtn.addEventListener('click', () => {
-        settingsModal.classList.add('hidden');
-    });
+		function getLocalDate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
 
-    settingsForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        settingsError.classList.add('hidden');
-        let configJson;
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return; // Add check if container exists
+            const toast = document.createElement('div');
+            const icon = type === 'success'
+                ? `<i data-lucide="check-circle" class="w-5 h-5 text-green-500"></i>`
+                : `<i data-lucide="x-circle" class="w-5 h-5 text-red-500"></i>`;
 
-        try {
-            // 嘗試解析 JSON
-            configJson = JSON.parse(configInput.value);
-            
-            // 簡單驗證
-            if (!configJson.apiKey || !configJson.projectId || !configJson.authDomain) {
-                throw new Error("設定檔中缺少 apiKey, projectId 或 authDomain。");
+            toast.className = `toast flex items-center gap-3 bg-white shadow-2xl rounded-lg py-3 px-4 mb-2 transition-transform duration-300`;
+            toast.innerHTML = `${icon}<p class="font-semibold text-slate-700">${message}</p>`;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            requestAnimationFrame(() => toast.classList.add('show'));
+
+            setTimeout(() => {
+                toast.classList.add('hide');
+                toast.addEventListener('animationend', () => toast.remove());
+            }, 3000);
+        }
+
+        // --- DATA LOADING AND PROCESSING ---
+        function parseCsvLine(line) {
+            // Simplified as CSV data is removed, but kept structure in case needed later
+             return line.split(','); // Basic split, assuming no quotes needed now
+        }
+
+
+        function getInitialDataFromCSV() {
+             // Return an empty array as CSV data is removed
+             return [];
+        }
+
+        // --- UI Rendering ---
+        function renderInventory() {
+            // Check if loading state is still present before modifying UI
+            if (DOM.loadingState && DOM.loadingState.style.display !== 'none') {
+                 DOM.inventoryListSection.style.display = 'block';
+                 DOM.loadingState.style.display = 'none';
             }
+            const mainListContainer = DOM.inventoryList;
+            if (!mainListContainer) return; // Add check
 
-            // 儲存到 localStorage
-            localStorage.setItem('firebaseConfig', JSON.stringify(configJson));
-            
-            // 提示用戶重載
-            alert("設定已儲存！頁面將重新載入以套用新設定。");
-            location.reload();
+            mainListContainer.innerHTML = '';
+            mainListContainer.className = 'space-y-8';
 
-        } catch (err) {
-            settingsError.textContent = `儲存失敗: ${err.message}。請確認您貼上的是完整的 JSON。`;
-            settingsError.classList.remove('hidden');
-        }
-    });
+            const activeItems = allSupplies.filter(item => !item.name.includes('(停用)') && !(item.purchaseStatus && item.purchaseStatus.includes('停用')));
+            const discontinuedItems = allSupplies.filter(item => item.name.includes('(停用)') || (item.purchaseStatus && item.purchaseStatus.includes('停用')));
 
+              const groupedActiveItems = activeItems.reduce((acc, item) => {
+                  const majorCat = majorCategoryMap[item.category] || '其他';
+                  if (!acc[majorCat]) acc[majorCat] = [];
+                  acc[majorCat].push(item);
+                  return acc;
+              }, {});
 
-    // --- 3. 主程式 IIFE ---
-    (async function main() {
+            const categoryOrder = ['滾筒布', '滾筒紙', '墨水匣', '其他'];
+            const categoryIcons = { '滾筒布': 'layers', '滾筒紙': 'file-stack', '墨水匣': 'droplets', '其他': 'package' };
 
-        // 從 localStorage 讀取設定
-        const configStr = localStorage.getItem('firebaseConfig');
-        let firebaseConfig = null;
+            if (activeItems.length > 0) {
+                 categoryOrder.forEach(majorCat => {
+                     const itemsInCategory = groupedActiveItems[majorCat];
+                     if (itemsInCategory && itemsInCategory.length > 0) {
+                         const groupContainer = document.createElement('div');
+                         groupContainer.innerHTML = `
+                             <h3 class="text-lg font-semibold text-slate-700 mb-3 border-b pb-2 flex items-center">
+                                 <i data-lucide="${categoryIcons[majorCat] || 'package'}" class="w-5 h-5 mr-2 text-slate-500"></i>
+                                 ${majorCat}
+                             </h3>`;
 
-        if (configStr) {
-            try {
-                firebaseConfig = JSON.parse(configStr);
-            } catch (e) {
-                console.error("無法解析儲存的 Firebase 設定:", e);
-                errorBanner.style.display = 'block';
-                errorBanner.querySelector('p').textContent = '儲存的 Firebase 設定格式錯誤。請點擊「設定」重新輸入。';
-            }
-        }
-
-        // 檢查 firebaseConfig 是否存在
-        if (!firebaseConfig) {
-            console.warn("找不到 Firebase 設定。");
-            errorBanner.style.display = 'block'; // 顯示提示
-            // 檢查是否為第一次使用，如果是，自動彈出設定
-            if (!configStr) {
-                settingsModal.classList.remove('hidden');
-            }
-            return; // 終止執行
-        }
-
-        // --- 4. 初始化 Firebase (如果設定存在) ---
-        
-        // 顯示載入器
-        globalLoader.classList.remove('hidden');
-        
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-        } catch (e) {
-            console.error("Firebase 初始化失敗:", e);
-            globalLoader.classList.add('hidden'); // 隱藏載入器
-            errorBanner.style.display = 'block'; // 顯示錯誤訊息
-            errorBanner.querySelector('p').textContent = `Firebase 初始化失敗: ${e.message}。請檢查您的設定檔。`;
-            return; 
-        }
-
-        // --- 5. 檢查 URL 參數 (路由) ---
-        const params = new URLSearchParams(window.location.search);
-        const action = params.get('action');
-        const itemId = params.get('id'); // ID 現在是字串
-
-        // --- 6. 監聽認證狀態 (改用匿名登入) ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userId = user.uid;
-                console.log("Firebase 使用者已認證:", userId);
-                
-                // 設定 Firestore 集合路徑
-                // **注意：我們使用 appId 和 userId 來建立唯一的路徑**
-                inventoryCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/inventory`);
-                outboundLogCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/outboundLog`);
-
-                // 根據 URL 決定執行哪個功能
-                if (action === 'quickOutbound' && itemId) {
-                    // 執行快速出庫
-                    loaderText.textContent = "正在載入商品...";
-                    await initializeQuickOutbound(itemId);
-                    globalLoader.classList.add('hidden'); // 隱藏載入器
-                    quickOutboundContainer.classList.remove('hidden');
-                    mainDashboard.classList.add('hidden'); // 隱藏主儀表板
-                } else {
-                    // 執行主儀表板
-                    loaderText.textContent = "正在載入庫存資料...";
-                    initializeDashboard();
-                    // (onSnapshot 會處理隱藏 loader)
-                }
+                         const subListContainer = document.createElement('div');
+                         renderGroup(subListContainer, itemsInCategory);
+                         groupContainer.appendChild(subListContainer);
+                         mainListContainer.appendChild(groupContainer);
+                     }
+                 });
             } else {
-                // 嘗試匿名登入
-                console.log("尚未認證，嘗試匿名登入...");
-                loaderText.textContent = "正在驗證身份...";
-                try {
-                    await signInAnonymously(auth);
-                    // 登入成功後，onAuthStateChanged 會再次觸發
-                } catch (error) {
-                    console.error("Firebase 匿名登入失敗:", error);
-                    globalLoader.classList.add('hidden'); // 隱藏載入器
-                    errorBanner.style.display = 'block';
-                    errorBanner.querySelector('p').textContent = `Firebase 登入失敗: ${error.message}。請檢查您的網路和 Firebase 規則。`;
+                 mainListContainer.innerHTML = `<div class="text-center py-10 bg-slate-50 rounded-lg"><i data-lucide="inbox" class="mx-auto h-12 w-12 text-slate-400"></i><h3 class="mt-2 text-sm font-medium text-slate-900">沒有任何項目</h3><p class="mt-1 text-sm text-slate-500">請先新增耗材或管理品項。</p></div>`;
+            }
+
+            if (discontinuedItems.length > 0) {
+                const discontinuedSection = document.createElement('div');
+                discontinuedSection.className = 'mt-12';
+                discontinuedSection.innerHTML = `
+                    <h2 class="text-2xl font-bold text-slate-500 mb-4 border-b pb-2 flex items-center">
+                        <i data-lucide="archive" class="w-6 h-6 mr-3 text-slate-400"></i>
+                        停用項目
+                    </h2>
+                `;
+                const discontinuedContainer = document.createElement('div');
+                renderGroup(discontinuedContainer, discontinuedItems);
+                discontinuedSection.appendChild(discontinuedContainer);
+                mainListContainer.appendChild(discontinuedSection);
+            }
+
+            lucide.createIcons();
+        }
+
+
+        function renderGroup(container, items) {
+            if (!container || items.length === 0) return; // Add check
+
+              if (currentView === 'card') {
+                 container.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4';
+                 items.sort((a,b) => a.name.localeCompare(b.name, 'zh-Hant')).forEach(item => {
+                     container.appendChild(createItemCard(item));
+                 });
+              } else {
+                 container.className = 'bg-white rounded-xl shadow-md overflow-hidden';
+                 const tableHTML = `
+                     <table class="w-full text-sm text-left text-slate-500 table-striped">
+                         <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                             <tr>
+                                 <th scope="col" class="px-4 py-3">耗材名稱</th>
+                                 <th scope="col" class="px-4 py-3">採購編號</th>
+                                 <th scope="col" class="px-4 py-3">財編狀態</th>
+                                 <th scope="col" class="px-4 py-3 text-center">庫存</th>
+                                 <th scope="col" class="px-4 py-3 text-center">操作</th>
+                             </tr>
+                         </thead>
+                         <tbody>
+                             ${items.sort((a,b) => a.name.localeCompare(b.name, 'zh-Hant')).map(createItemTableRow).join('')}
+                         </tbody>
+                     </table>`;
+                 container.innerHTML = tableHTML;
+                 addTableEventListeners(container);
+              }
+        }
+
+        function createItemCard(item) {
+            const itemCard = document.createElement('div');
+
+            const isInk = (majorCategoryMap[item.category] || '其他') === '墨水匣';
+            const threshold = isInk ? CONSTANTS.INK_LOW_STOCK_THRESHOLD : CONSTANTS.OTHER_LOW_STOCK_THRESHOLD;
+            const isLowStock = item.quantity < threshold && item.quantity > 0;
+            const isZero = item.quantity === 0;
+            const isDiscontinued = item.name.includes('(停用)') || (item.purchaseStatus && item.purchaseStatus.includes('停用'));
+
+            let cardClasses = 'bg-white rounded-lg shadow p-4 flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 relative overflow-hidden';
+            if (isDiscontinued) {
+                 cardClasses += ' opacity-60 bg-slate-100';
+            }
+            if (isZero && !isDiscontinued) {
+                 cardClasses += ' border-2 border-red-400 ring-4 ring-red-100/50';
+            } else if (isLowStock && !isDiscontinued) {
+                cardClasses += ' border-2 border-amber-400 ring-4 ring-amber-100/50';
+            }
+
+            let purchaseAlertHtml = '';
+            if (isZero && !isDiscontinued) {
+                purchaseAlertHtml = `<div class="mb-3 flex items-center p-2 rounded-md bg-red-100 text-red-800 text-sm font-bold">
+                                     <i data-lucide="shopping-cart" class="w-5 h-5 mr-2"></i>
+                                     <span>庫存已歸零 (建議庫存: ${threshold})</span>
+                                 </div>`;
+            } else if (isLowStock && !isDiscontinued) {
+                 purchaseAlertHtml = `<div class="mb-3 flex items-center p-2 rounded-md bg-amber-100 text-amber-800 text-sm font-bold">
+                                     <i data-lucide="alert-circle" class="w-5 h-5 mr-2"></i>
+                                     <span>請盡快採購 (建議庫存: ${threshold})</span>
+                                 </div>`;
+            }
+
+            const actionButtonsHtml = `
+                <div class="flex items-center justify-between mt-4 pt-3 border-t">
+                    <div class="flex items-center space-x-2">
+                        <button data-action="decrease" class="btn-action bg-slate-200 text-slate-700 rounded-full w-8 h-8 flex items-center justify-center hover:bg-slate-300 text-lg font-bold" ${item.quantity <= 0 ? 'disabled' : ''}>-</button>
+                        <span data-role="quantity-display" class="font-bold text-xl text-slate-800 w-10 text-center">${item.quantity}</span>
+                        <button data-action="increase" class="btn-action bg-green-100 text-green-700 rounded-full w-8 h-8 flex items-center justify-center hover:bg-green-200 text-lg font-bold">+</button>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button data-action="unseal" class="btn-action bg-blue-100 text-blue-600 rounded-md h-8 px-3 flex items-center justify-center hover:bg-blue-200 text-xs font-semibold" ${item.quantity <= 0 ? 'disabled' : ''}>拆封</button>
+                        <button data-action="edit" class="btn-action text-slate-500 rounded-full w-8 h-8 flex items-center justify-center hover:bg-slate-200 hover:text-indigo-600"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                        <button data-action="delete" class="btn-action text-slate-500 rounded-full w-8 h-8 flex items-center justify-center hover:bg-slate-200 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+            `;
+
+            itemCard.className = cardClasses;
+            itemCard.dataset.itemId = item.id;
+            itemCard.innerHTML = `
+                <div>
+                    ${purchaseAlertHtml}
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="text-base font-bold text-slate-800 flex-1 pr-2">${item.name}</h3>
+                        <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-100 flex-shrink-0">${item.category || '未分類'}</span>
+                    </div>
+                    <div class="mt-2 space-y-1 text-xs text-slate-500">
+                        <p>採購編號: <span class="font-medium text-slate-600">${item.purchaseNumber || 'N/A'}</span></p>
+                        <p>最近入庫: <span class="font-medium text-slate-600">${item.lastPurchaseDate || '---'}</span></p>
+                        <p>財編狀態: <span class="font-medium text-slate-600">${item.purchaseStatus || 'N/A'}</span></p>
+                        ${item.remarks ? `<p class="mt-2 pt-2 border-t border-slate-200">備註: <span class="font-normal text-slate-600 whitespace-pre-wrap">${item.remarks}</span></p>` : ''}
+                    </div>
+                </div>
+                ${actionButtonsHtml}
+                `;
+
+            addCardEventListeners(itemCard, item);
+            return itemCard;
+        }
+
+        function createItemTableRow(item) {
+            const isInk = (majorCategoryMap[item.category] || '其他') === '墨水匣';
+            const threshold = isInk ? CONSTANTS.INK_LOW_STOCK_THRESHOLD : CONSTANTS.OTHER_LOW_STOCK_THRESHOLD;
+            const isLowStock = item.quantity < threshold && item.quantity > 0;
+            const isZero = item.quantity === 0;
+            const isDiscontinued = item.name.includes('(停用)') || (item.purchaseStatus && item.purchaseStatus.includes('停用'));
+
+            let rowClasses = 'border-b transition-colors';
+              if (isDiscontinued) {
+                 rowClasses += ' row-disabled';
+              } else if (isZero) {
+                rowClasses += ' bg-red-50 hover:bg-red-100';
+            } else if (isLowStock) {
+                 rowClasses += ' bg-amber-50 hover:bg-amber-100';
+            }
+
+            let nameCellContent = `<div>${item.name || 'N/A'}</div>`;
+              if (item.remarks) {
+                 nameCellContent += `<div class="text-xs text-slate-500 mt-1 whitespace-pre-wrap">${item.remarks}</div>`;
+              }
+            if (isZero && !isDiscontinued) {
+                nameCellContent = `<div>
+                    <div class="flex items-center font-bold text-red-800"><i data-lucide="shopping-cart" class="w-4 h-4 mr-2"></i><span>${item.name || 'N/A'}</span></div>
+                    <div class="text-xs text-red-600 font-semibold mt-1">庫存已歸零 (建議庫存: ${threshold})</div>
+                </div>`;
+            } else if (isLowStock && !isDiscontinued) {
+                 nameCellContent += `<div class="text-xs text-amber-600 font-semibold flex items-center mt-1"><i data-lucide="alert-triangle" class="w-3 h-3 mr-1"></i>請盡快採購 (建議庫存: ${threshold})</div>`;
+            }
+
+            const actionButtonsCell = `
+                <div class="flex items-center justify-center space-x-1">
+                    <button data-action="unseal" class="btn-action bg-blue-100 text-blue-600 rounded-md h-7 px-3 flex items-center justify-center hover:bg-blue-200 text-xs font-semibold" ${item.quantity <= 0 ? 'disabled' : ''}>拆封</button>
+                    <button data-action="decrease" class="btn-action bg-slate-100 text-slate-600 rounded-md w-7 h-7 flex items-center justify-center hover:bg-slate-200 text-base font-bold" ${item.quantity <= 0 ? 'disabled' : ''}>-</button>
+                    <button data-action="increase" class="btn-action bg-green-100 text-green-700 rounded-md w-7 h-7 flex items-center justify-center hover:bg-green-200 text-base font-bold">+</button>
+                    <button data-action="edit" class="btn-action text-slate-500 rounded-md w-7 h-7 flex items-center justify-center hover:bg-slate-200 hover:text-indigo-600"><i data-lucide="pencil" class="w-4 h-4 pointer-events-none"></i></button>
+                    <button data-action="delete" class="btn-action text-slate-500 rounded-md w-7 h-7 flex items-center justify-center hover:bg-slate-200 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i></button>
+                </div>
+            `;
+
+            return `
+                <tr class="${rowClasses}" data-item-id="${item.id}">
+                    <td class="px-4 py-3 font-medium">${nameCellContent}</td>
+                    <td class="px-4 py-3">${item.purchaseNumber || 'N/A'}</td>
+                    <td class="px-4 py-3">${item.purchaseStatus || 'N/A'}</td>
+                    <td class="px-4 py-3 text-center"><span data-role="quantity-display" class="font-bold text-base">${item.quantity}</span></td>
+                    <td class="px-4 py-3 text-center">${actionButtonsCell}</td>
+                </tr>`;
+        }
+
+        function renderUnsealHistory() {
+            const historyList = DOM.unsealHistoryList;
+            if (!historyList) return; // Add check
+            historyList.innerHTML = '';
+
+            const allHistory = allSupplies
+                .flatMap(item => (item.usageHistory || []).map(h => ({ ...h, name: item.name, category: item.category, itemId: item.id })))
+                .sort((a, b) => new Date(b.unsealedDate) - new Date(a.unsealedDate));
+
+            if (allHistory.length > 0) {
+                if(DOM.unsealHistorySection) DOM.unsealHistorySection.style.display = 'block'; // Add check
+                allHistory.slice(0, 15).forEach(entry => { // Show latest 15
+                    const li = document.createElement('div');
+                    li.className = 'text-sm text-slate-600 border-b border-slate-100 py-2 flex justify-between items-center';
+                    li.innerHTML = `
+                        <div class="flex-1">
+                            <span class="font-semibold text-slate-800">${entry.name}</span>
+                            <span class="text-xs text-slate-400 ml-2">(${majorCategoryMap[entry.category] || '其他'})</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                           <span class="text-xs font-mono bg-slate-100 text-slate-500 px-2 py-0.5 rounded">${entry.unsealedDate}</span>
+                           <button data-item-id="${entry.itemId}" data-history-id="${entry.id}" class="delete-history-btn text-slate-400 hover:text-red-500" title="刪除此紀錄">
+                               <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
+                           </button>
+                        </div>
+                    `;
+                    historyList.appendChild(li);
+                });
+                lucide.createIcons();
+            } else {
+                if(DOM.unsealHistorySection) DOM.unsealHistorySection.style.display = 'none'; // Add check
+            }
+        }
+
+        // --- Event Listener Helpers ---
+        function addCardEventListeners(card, item) {
+            card.addEventListener('click', (e) => handleItemAction(e, item));
+        }
+
+        function addTableEventListeners(table) {
+            table.addEventListener('click', (e) => {
+                const row = e.target.closest('tr[data-item-id]');
+                if (row) {
+                    const itemId = row.dataset.itemId;
+                    const item = allSupplies.find(s => s.id === itemId);
+                    if (item) handleItemAction(e, item);
+                }
+            });
+        }
+
+        async function handleItemAction(e, item) {
+            const button = e.target.closest('button[data-action]');
+            if (!button || button.disabled) return;
+            const action = button.dataset.action;
+
+            const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), item.id);
+
+            switch (action) {
+                case 'increase':
+                    openAddStockModal(item);
+                    break;
+                case 'decrease': {
+                    const newQuantity = item.quantity - 1;
+                    if (newQuantity < 0) return;
+                    showConfirmation('確認出庫', `確定要將 "${item.name}" 的庫存減 1 嗎？`, async () => {
+                        const today = getLocalDate();
+                        const historyEntry = { id: crypto.randomUUID(), unsealedDate: today, type: 'manual_decrease' };
+                        const updatedHistory = [...(item.usageHistory || []), historyEntry];
+                        await updateDoc(itemRef, {
+                                quantity: increment(-1),
+                                usageHistory: updatedHistory });
+                        showToast('庫存已更新');
+                    }, 'orange');
+                    break;
+                }
+                case 'delete':
+                    showConfirmation('確認刪除', `您確定要永久刪除 "${item.name}" 這筆紀錄嗎？`, async () => {
+                        await deleteDoc(itemRef);
+                        showToast('項目已刪除');
+                    }, 'red');
+                    break;
+                case 'edit':
+                    openEditModal(item);
+                    break;
+                case 'unseal': {
+                     const newQuantity = item.quantity - 1;
+                    if (newQuantity < 0) return;
+                    showConfirmation('確認拆封', `確定要拆封一個 "${item.name}" 嗎？庫存將會減 1。`, async () => {
+                        const today = getLocalDate();
+                        const historyEntry = { id: crypto.randomUUID(), unsealedDate: today, type: 'unseal' };
+                        const updatedHistory = [...(item.usageHistory || []), historyEntry];
+                        await updateDoc(itemRef, {
+                                quantity: increment(-1),
+                                usageHistory: updatedHistory });
+                        showToast('庫存已更新');
+                    }, 'blue');
+                    break;
                 }
             }
-        });
+        }
 
+        // --- Modal & Confirmation Logic ---
+        function openModal(modal) {
+            if (!modal) return; // Add check
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                const content = modal.querySelector('.modal-content');
+                if (content) content.classList.remove('opacity-0', '-translate-y-10'); // Add check
+            }, 10);
+        }
 
-        // --- 7. 快速出庫頁面邏輯 (Firestore 版本) ---
-        async function initializeQuickOutbound(id) {
-            const loadingEl = document.getElementById('quick-outbound-loading');
-            const contentEl = document.getElementById('quick-outbound-content');
-            const nameEl = document.getElementById('quick-outbound-name');
-            const stockEl = document.getElementById('quick-outbound-stock');
-            const buttonEl = document.getElementById('quick-outbound-button');
-            const messageEl = document.getElementById('quick-outbound-message');
+        function closeModal(modal) {
+            if (!modal) return; // Add check
+            modal.classList.add('opacity-0');
+            const content = modal.querySelector('.modal-content');
+            if (content) content.classList.add('opacity-0', '-translate-y-10'); // Add check
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (modal === DOM.mappingsModal) {
+                    if (editingKey) cancelEditMode();
+                    // Stop listening to logs when modal closes - REMOVED
+                }
+                if (modal === DOM.addStockModal || modal === DOM.editItemModal) currentlyEditingItemId = null;
+            }, 300);
+        }
 
-            if (!inventoryCollectionRef) {
-                loadingEl.innerHTML = '<p class="text-red-600">資料庫尚未準備就緒，請稍候...</p>';
-                return;
+        function showConfirmation(title, message, onConfirm, type = 'red') {
+            const modal = DOM.confirmationModal;
+            if (!modal) return; // Add check
+            const confirmBtn = modal.querySelector('#confirm-btn');
+            const iconContainer = modal.querySelector('#confirmation-icon');
+            const titleEl = modal.querySelector('#confirmation-title');
+            const messageEl = modal.querySelector('#confirmation-message');
+            const cancelBtn = modal.querySelector('#cancel-confirmation-btn');
+
+            if(!confirmBtn || !iconContainer || !titleEl || !messageEl || !cancelBtn) return; // Add checks
+
+            const typeMap = {
+                red: { btn: 'bg-red-600 hover:bg-red-700', icon: 'bg-red-100', iconContent: `<i data-lucide="alert-triangle" class="h-6 w-6 text-red-600"></i>` },
+                blue: { btn: 'bg-blue-600 hover:bg-blue-700', icon: 'bg-blue-100', iconContent: `<i data-lucide="info" class="h-6 w-6 text-blue-600"></i>` },
+                orange: { btn: 'bg-orange-500 hover:bg-orange-600', icon: 'bg-orange-100', iconContent: `<i data-lucide="alert-circle" class="h-6 w-6 text-orange-600"></i>` }
+            };
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+
+            confirmBtn.className = `w-full text-white font-semibold py-2 px-4 rounded-lg transition-colors ${typeMap[type].btn}`;
+            iconContainer.className = `mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4 ${typeMap[type].icon}`;
+            iconContainer.innerHTML = typeMap[type].iconContent;
+            lucide.createIcons();
+
+            const newConfirmHandler = () => {
+                onConfirm();
+                closeModal(modal);
+            };
+
+            const newCancelHandler = () => {
+                closeModal(modal);
+            };
+
+            // Clone and replace to remove old listeners
+            const confirmBtnClone = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(confirmBtnClone, confirmBtn);
+            confirmBtnClone.addEventListener('click', newConfirmHandler, { once: true });
+
+            const cancelBtnClone = cancelBtn.cloneNode(true);
+            cancelBtn.parentNode.replaceChild(cancelBtnClone, cancelBtn);
+            cancelBtnClone.addEventListener('click', newCancelHandler, { once: true });
+
+            openModal(modal);
+        }
+
+        // --- Mappings and Category Logic ---
+        function initializeAndLoadMappings() {
+            // 1. Base mappings start empty
+            const csvBasedMappings = {};
+
+            // 2. Listen to Firestore for updates
+            const mappingsRef = collection(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION));
+            onSnapshot(mappingsRef, (snapshot) => {
+                const firestoreMappings = {};
+                snapshot.forEach(doc => {
+                    firestoreMappings[doc.id] = doc.data();
+                });
+                // 3. Merge Firestore data
+                purchaseNumberMap = { ...csvBasedMappings, ...firestoreMappings };
+                renderMappingsList();
+                populateCategorySelects(); // Update modal select
+            }, (error) => {
+                 console.error("讀取品項對照表時發生錯誤:", error);
+                 showToast('讀取品項對照表失敗', 'error');
+                 if (Object.keys(purchaseNumberMap).length === 0) {
+                     purchaseNumberMap = {};
+                     renderMappingsList();
+                     populateCategorySelects(); // Update modal select even on error
+                 }
+            });
+        }
+
+        function renderMappingsList() {
+             if (!DOM.mappingsListContainer) return; // Add check
+            DOM.mappingsListContainer.innerHTML = '';
+
+            const container = document.createElement('div');
+            container.innerHTML = '<h4 class="font-semibold text-slate-700 mb-2">品項對照表</h4>';
+            const list = document.createElement('div');
+            list.className = 'space-y-2';
+
+            const sortedKeys = Object.keys(purchaseNumberMap).sort();
+
+            if (sortedKeys.length === 0) {
+                list.innerHTML = '<p class="text-slate-500 text-sm">尚未建立任何品項。</p>';
+            } else {
+                let elementToScrollTo = null; // Variable to hold the element
+                sortedKeys.forEach(number => {
+                    const item = purchaseNumberMap[number];
+                    if (!item) return; // Skip if item data is missing
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center text-sm bg-slate-100 p-2 rounded-md transition-all duration-300';
+                    div.dataset.mappingKey = number; // Add a data-attribute for selection
+                    div.innerHTML = `
+                        <div>
+                            <strong class="text-slate-800">${number}</strong>
+                            <span class="text-slate-600 ml-2">${item.name || 'N/A'} (${item.category || 'N/A'})</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button data-key="${number}" class="edit-mapping-btn text-slate-500 hover:text-indigo-600" title="編輯">
+                                <i data-lucide="pencil" class="w-4 h-4 pointer-events-none"></i>
+                            </button>
+                            <button data-key="${number}" class="delete-mapping-btn text-slate-500 hover:text-red-600" title="刪除">
+                                <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
+                            </button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+
+                    // Check if this is the item we want to scroll to
+                    if (window.lastEditedMappingKey && window.lastEditedMappingKey === number) {
+                        elementToScrollTo = div;
+                        div.classList.add('bg-indigo-100', 'ring-2', 'ring-indigo-500'); // Highlight it
+                    }
+                });
+
+                // After loop, scroll if element was found
+                if (elementToScrollTo) {
+                    elementToScrollTo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Clear the flag
+                    window.lastEditedMappingKey = null;
+
+                    // Remove highlight after a delay
+                    setTimeout(() => {
+                        if (elementToScrollTo) elementToScrollTo.classList.remove('bg-indigo-100', 'ring-2', 'ring-indigo-500'); // Add check
+                    }, 2500);
+                }
+            }
+            container.appendChild(list);
+            DOM.mappingsListContainer.appendChild(container);
+            lucide.createIcons();
+        }
+
+        function listenToMappingLogs() {
+            // Clear old listener if it exists
+            if (mappingLogUnsubscribe) {
+                mappingLogUnsubscribe();
+                mappingLogUnsubscribe = null; // Reset handle
             }
 
-            const itemRef = doc(db, inventoryCollectionRef.path, id);
-            let itemDoc, item;
+            const logsRef = collection(db, getCollectionPath(CONSTANTS.MAPPING_LOGS_COLLECTION));
+            const q = query(logsRef, orderBy('timestamp', 'desc'), limit(20)); // Get latest 20
+
+            mappingLogUnsubscribe = onSnapshot(q, (snapshot) => {
+                const logs = [];
+                snapshot.forEach(doc => {
+                    logs.push(doc.data());
+                });
+                renderMappingLogs(logs);
+            }, (error) => {
+                console.error("無法讀取品項日誌:", error);
+                 const logListEl = document.getElementById('mappings-log-list');
+                 if (logListEl) logListEl.innerHTML = '<p class="text-red-500">無法載入紀錄。</p>'; // Add check
+            });
+        }
+
+        function renderMappingLogs(logs) {
+            const listEl = document.getElementById('mappings-log-list');
+            if (!listEl) return;
+            const containerEl = document.getElementById('mappings-log-container');
+            if (!containerEl) return; // Add check
+
+            if (logs.length === 0) {
+                listEl.innerHTML = '<p class="text-slate-400">尚無任何操作紀錄。</p>';
+            } else {
+                listEl.innerHTML = logs.map(log => {
+                     const date = new Date(log.timestamp);
+                     // Check if date is valid before formatting
+                     const formattedDate = !isNaN(date)
+                        ? `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+                        : '無效日期';
+                    return `
+                        <div class="border-b border-slate-200 pb-1 mb-1">
+                            <p class="font-medium text-slate-700">${log.action || '未知操作'}</p>
+                            <p class="text-xs text-slate-500">${formattedDate}</p>
+                        </div>
+                    `;
+                }).join('');
+            }
+            containerEl.style.display = 'block'; // Show the container
+        }
+
+        function startEditMode(key) {
+             if (!purchaseNumberMap[key]) return; // Add check
+            editingKey = key;
+            const item = purchaseNumberMap[key];
+            if(DOM.mappingFormTitle) DOM.mappingFormTitle.textContent = '編輯對照品項'; // Add check
+            const numInput = document.getElementById('new-purchase-number');
+            const nameInput = document.getElementById('new-item-name');
+            if (numInput) numInput.value = key;
+            if (nameInput) nameInput.value = item.name;
+            if (DOM.newItemCategorySelect) DOM.newItemCategorySelect.value = item.category; // Add check
+
+             if(DOM.mappingFormButtons) { // Add check
+                DOM.mappingFormButtons.innerHTML = `
+                    <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors btn-action">更新品項</button>
+                    <button type="button" id="cancel-edit-btn" class="w-full bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">取消</button>
+                `;
+                const cancelBtn = document.getElementById('cancel-edit-btn');
+                if(cancelBtn) cancelBtn.addEventListener('click', cancelEditMode); // Add check
+             }
+             if(DOM.addMappingForm) DOM.addMappingForm.scrollIntoView({ behavior: 'smooth' }); // Add check
+        }
+
+        function cancelEditMode() {
+            editingKey = null;
+            if(DOM.addMappingForm) DOM.addMappingForm.reset(); // Add check
+            if(DOM.mappingFormTitle) DOM.mappingFormTitle.textContent = '新增對照品項'; // Add check
+            if(DOM.mappingFormButtons) { // Add check
+                 DOM.mappingFormButtons.innerHTML = `
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors btn-action">儲存品項</button>
+                `;
+            }
+        }
+
+        async function populateCategorySelects() {
+            // Only populates the modal select now
+            if (!DOM.newItemCategorySelect) return; // Add check
 
             try {
-                itemDoc = await getDoc(itemRef);
-                if (!itemDoc.exists()) {
-                    throw new Error("找不到此商品！(ID: " + id + ")");
+                const customCategoriesRef = collection(db, getCollectionPath(CONSTANTS.CUSTOM_CATEGORIES_COLLECTION));
+                const snapshot = await getDocs(customCategoriesRef);
+                const customCategories = snapshot.docs.map(doc => doc.id);
+                // Derive categories also from the *current* purchaseNumberMap
+                const allCategories = [...new Set(Object.values(purchaseNumberMap).map(item => item.category).filter(Boolean))]; // Filter out potential undefined/null
+                const finalCategories = [...new Set([...allCategories, ...customCategories])].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+
+                const select = DOM.newItemCategorySelect;
+                const currentVal = select.value;
+                select.innerHTML = ''; // Clear previous options
+
+                // Add default empty option if needed, e.g., <option value="">請選擇</option>
+
+                finalCategories.forEach(categoryName => {
+                    const option = document.createElement('option');
+                    option.value = categoryName;
+                    option.textContent = categoryName;
+                    select.appendChild(option);
+                });
+
+                // Restore previous selection if possible
+                if (finalCategories.includes(currentVal)) {
+                    select.value = currentVal;
+                } else {
+                    select.value = ''; // Or select the first available option?
                 }
-                item = { id: itemDoc.id, ...itemDoc.data() };
-            } catch (err) {
-                console.error(err);
-                nameEl.textContent = '錯誤';
-                stockEl.textContent = err.message;
-                buttonEl.disabled = true;
-                buttonEl.classList.add('bg-gray-400', 'cursor-not-allowed');
-                buttonEl.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-                loadingEl.classList.add('hidden');
-                contentEl.classList.remove('hidden');
-                return;
+            } catch (error) {
+                console.error("無法載入類別選項:", error);
+                // Handle error, maybe show a default option or message
+                DOM.newItemCategorySelect.innerHTML = '<option value="">無法載入類別</option>';
             }
+        }
 
-            loadingEl.classList.add('hidden');
-            contentEl.classList.remove('hidden');
-            nameEl.textContent = item.name;
-            stockEl.textContent = item.stock;
 
-            if (item.stock === 0) {
-                buttonEl.textContent = '庫存為 0';
-                buttonEl.disabled = true;
-                buttonEl.classList.add('bg-red-400', 'cursor-not-allowed');
-                buttonEl.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-                return;
+        function addCategoryOption(categoryName) {
+            // Only adds to the modal select now
+            if (!categoryName || !DOM.newItemCategorySelect) return;
+
+            const select = DOM.newItemCategorySelect;
+            if (!Array.from(select.options).some(opt => opt.value === categoryName)){
+                const option = document.createElement('option');
+                option.value = categoryName;
+                option.textContent = categoryName;
+                select.appendChild(option);
+                // Optional: Re-sort options after adding
+                // sortSelectOptions(select);
             }
+        }
 
-            buttonEl.addEventListener('click', async () => {
-                buttonEl.disabled = true;
-                buttonEl.textContent = '處理中...';
+        async function saveCustomCategory(categoryName) {
+             if (!categoryName) return;
+             try {
+                const categoryRef = doc(db, getCollectionPath(CONSTANTS.CUSTOM_CATEGORIES_COLLECTION), categoryName);
+                await setDoc(categoryRef, { name: categoryName });
+                await populateCategorySelects(); // Refresh modal dropdown after saving
+                return true; // Indicate success
+             } catch (error) {
+                 console.error("儲存自訂類別失敗:", error);
+                 showToast('儲存新類別失敗', 'error');
+                 return false; // Indicate failure
+             }
+        }
 
-                try {
-                    const freshDoc = await getDoc(itemRef);
-                    const freshItem = freshDoc.data();
 
-                    if (freshItem.stock > 0) {
+        // --- Update/Delete/Edit Functions ---
+
+        function openAddStockModal(item) {
+            currentlyEditingItemId = item.id;
+            if(DOM.addStockForm) { // Add check
+                DOM.addStockForm.reset();
+                const dateInput = DOM.addStockForm['add-stock-date'];
+                if (dateInput) dateInput.value = getLocalDate(); // Add check
+            }
+            openModal(DOM.addStockModal);
+        }
+
+        function openEditModal(item) {
+            currentlyEditingItemId = item.id;
+             if(DOM.editItemForm) { // Add check
+                const dateInput = DOM.editItemForm['edit-last-purchase-date'];
+                const qtyInput = DOM.editItemForm['edit-quantity'];
+                const statusInput = DOM.editItemForm['edit-purchase-status'];
+                const remarksInput = DOM.editItemForm['edit-remarks'];
+
+                if(dateInput) dateInput.value = item.lastPurchaseDate || '';
+                if(qtyInput) qtyInput.value = item.quantity;
+                if(statusInput) statusInput.value = item.purchaseStatus || '';
+                if(remarksInput) remarksInput.value = item.remarks || '';
+            }
+            openModal(DOM.editItemModal);
+        }
+
+        async function setupAddStockFormListener() {
+             if (!DOM.addStockForm) return; // Add check
+            DOM.addStockForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentlyEditingItemId) return;
+
+                const dateInput = DOM.addStockForm['add-stock-date'];
+                const qtyInput = DOM.addStockForm['add-stock-quantity'];
+                if (!dateInput || !qtyInput) return; // Add checks
+
+                const date = dateInput.value || getLocalDate();
+                const quantity = parseInt(qtyInput.value, 10);
+
+                if (isNaN(quantity) || quantity <= 0) {
+                    showToast('請輸入有效的數量', 'error');
+                    return;
+                }
+
+                const item = allSupplies.find(s => s.id === currentlyEditingItemId);
+                if (item) {
+                     try {
+                        const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), item.id);
+                        const historyEntry = { date, quantity, type: 'restock' };
+                        const updatedHistory = [...(item.inboundHistory || []), historyEntry];
+
                         await updateDoc(itemRef, {
-                            stock: freshItem.stock - 1
+                            quantity: increment(quantity), // Use increment here
+                            lastPurchaseDate: date,
+                            inboundHistory: updatedHistory
                         });
 
-                        const logEntry = {
-                            timestamp: serverTimestamp(),
-                            name: freshItem.name,
-                            poNumber: freshItem.poNumber,
-                            quantity: 1,
-                        };
-                        await addDoc(outboundLogCollectionRef, logEntry);
-
-                        stockEl.textContent = freshItem.stock - 1;
-                        messageEl.textContent = `出庫成功！ ${freshItem.name} 剩餘庫存: ${freshItem.stock - 1}`;
-                        messageEl.classList.remove('hidden');
-                        buttonEl.textContent = '已出庫';
-                        buttonEl.classList.add('bg-green-500', 'cursor-not-allowed');
-                        buttonEl.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-                    } else {
-                        stockEl.textContent = 0;
-                        messageEl.textContent = '庫存已為 0，無法出庫。';
-                        messageEl.classList.remove('hidden');
-                        messageEl.classList.add('text-red-600');
-                        messageEl.classList.remove('text-green-600');
-                        buttonEl.textContent = '庫存為 0';
-                        buttonEl.classList.add('bg-red-400', 'cursor-not-allowed');
-                        buttonEl.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                        closeModal(DOM.addStockModal);
+                        showToast('入庫成功');
+                    } catch (error) {
+                        console.error("添加入庫失敗:", error);
+                        showToast('入庫失敗，請稍後再試', 'error');
                     }
-                } catch (err) {
-                    console.error("快速出庫失敗:", err);
-                    messageEl.textContent = `出庫失敗: ${err.message}`;
-                    messageEl.classList.remove('hidden');
-                    messageEl.classList.add('text-red-600');
-                    messageEl.classList.remove('text-green-600');
-                    buttonEl.disabled = false; 
-                    buttonEl.textContent = '確認出庫 (-1)';
+                } else {
+                     showToast('找不到要更新的項目', 'error');
                 }
             });
         }
 
+        async function setupEditFormListener() {
+             if(!DOM.editItemForm) return; // Add check
+            DOM.editItemForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentlyEditingItemId) return;
 
-        // --- 8. 主儀表板邏輯 (Firestore 版本) ---
-        function initializeDashboard() {
-            const LOW_STOCK_THRESHOLD = 10;
-            
-            let inventoryData = []; // 本地快照
-            let outboundLog = []; // 本地快照
+                const dateInput = DOM.editItemForm['edit-last-purchase-date'];
+                const qtyInput = DOM.editItemForm['edit-quantity'];
+                const statusInput = DOM.editItemForm['edit-purchase-status'];
+                const remarksInput = DOM.editItemForm['edit-remarks'];
+                if(!dateInput || !qtyInput || !statusInput || !remarksInput) return; // Add checks
 
-            // DOM 元素
-            const grid = document.getElementById('inventory-grid');
-            const addForm = document.getElementById('add-product-form');
-            const editModal = document.getElementById('edit-modal');
-            const editForm = document.getElementById('edit-form');
-            const cancelEditBtn = document.getElementById('cancel-edit');
-            const outboundModal = document.getElementById('outbound-modal');
-            const outboundForm = document.getElementById('outbound-form');
-            const cancelOutboundBtn = document.getElementById('cancel-outbound');
-            const outboundError = document.getElementById('outbound-error');
-            const qrCodeModal = document.getElementById('qr-code-modal');
-            const qrCodeTitle = document.getElementById('qr-code-title');
-            const qrCodeContainer = document.getElementById('qr-code-canvas-container');
-            const cancelQrCodeBtn = document.getElementById('cancel-qr-code');
-            const totalStockEl = document.getElementById('total-stock');
-            const totalItemsEl = document.getElementById('total-items');
-            const lowStockAlertsEl = document.getElementById('low-stock-alerts');
-            const logBody = document.getElementById('outbound-log-body');
-
-            // --- 核心監聽器 ---
-            if (!inventoryCollectionRef) {
-                console.warn("儀表板初始化時，資料庫尚未準備就緒。");
-                globalLoader.classList.add('hidden');
-                grid.innerHTML = `<p class="text-red-500 col-span-full text-center">資料庫連線失敗，請設定 Firebase Config。</p>`;
-                return;
-            }
-
-            // 1. 監聽庫存資料
-            const qInventory = query(inventoryCollectionRef);
-            onSnapshot(qInventory, (querySnapshot) => {
-                inventoryData = []; 
-                querySnapshot.forEach((doc) => {
-                    inventoryData.push({ id: doc.id, ...doc.data() });
-                });
-                renderInventory(); 
-                globalLoader.classList.add('hidden'); 
-                mainDashboard.classList.remove('hidden');
-            }, (error) => {
-                console.error("讀取庫存失敗:", error);
-                grid.innerHTML = `<p class="text-red-500 col-span-full text-center">讀取庫存失敗: ${error.message}</p>`;
-                globalLoader.classList.add('hidden'); 
-                mainDashboard.classList.remove('hidden');
-            });
-
-            // 2. 監聽出庫紀錄
-            const qLog = query(outboundLogCollectionRef);
-            onSnapshot(qLog, (querySnapshot) => {
-                outboundLog = []; 
-                querySnapshot.forEach((doc) => {
-                    outboundLog.push({ id: doc.id, ...doc.data() });
-                });
-                renderOutboundLog(); 
-            }, (error) => {
-                console.error("讀取紀錄失敗:", error);
-                logBody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-red-500">讀取紀錄失敗: ${error.message}</td></tr>`;
-            });
+                const newLastPurchaseDate = dateInput.value;
+                const newQuantity = parseInt(qtyInput.value, 10);
+                const newPurchaseStatus = statusInput.value.trim();
+                const newRemarks = remarksInput.value.trim();
 
 
-            // --- 渲染功能 (保持不變) ---
-
-            // 1. 渲染所有商品卡片
-            function renderInventory() {
-                grid.innerHTML = '';
-                
-                if (inventoryData.length === 0) {
-                    grid.innerHTML = '<p class="text-slate-500 col-span-full text-center">目前沒有庫存商品。</p>';
-                    updateStatistics(); 
+                if (isNaN(newQuantity) || newQuantity < 0) { // Also check for negative
+                    showToast('請輸入有效的庫存數量 (必須是非負整數)', 'error');
                     return;
                 }
 
-                inventoryData.forEach(item => {
-                    const stockColorClass = item.stock < LOW_STOCK_THRESHOLD ? 'text-red-600' : 'text-slate-900';
-                    const stockBgClass = item.stock < LOW_STOCK_THRESHOLD ? 'bg-red-100' : 'bg-slate-100';
-                    const stockRingClass = item.stock < LOW_STOCK_THRESHOLD ? 'ring-red-300' : 'ring-transparent';
-
-                    const card = document.createElement('div');
-                    card.className = `bg-white rounded-xl shadow-sm overflow-hidden flex flex-col transition-shadow hover:shadow-lg ring-1 ${stockRingClass} border border-slate-200`;
-                    
-                    const remarksHtml = item.remarks ? `
-                        <div class="mt-3 pt-3 border-t border-slate-100">
-                            <p class="text-sm font-medium text-slate-500">備註：</p>
-                            <p class="text-sm text-slate-700 whitespace-pre-wrap">${escapeHTML(item.remarks)}</p>
-                        </div>
-                    ` : '';
-
-                    card.innerHTML = `
-                        <div class="p-5 ${item.stock < LOW_STOCK_THRESHOLD ? 'bg-red-50' : ''} flex-grow">
-                            <div class="flex justify-between items-start">
-                                <span class="inline-block bg-sky-100 text-sky-800 text-xs font-semibold px-3 py-1 rounded-full mb-2">${escapeHTML(item.category)}</span>
-                                <div class="relative ${stockBgClass} rounded-full px-4 py-2">
-                                    <span class="absolute top-0 right-2 text-xs text-slate-400">庫存</span>
-                                    <span class="text-3xl font-bold ${stockColorClass}">${item.stock}</span>
-                                </div>
-                            </div>
-                            <h3 class="text-lg font-bold text-slate-900 mt-2 truncate">${escapeHTML(item.name)}</h3>
-                            <div class="mt-3 space-y-2 text-sm text-slate-600">
-                                <p><strong>採購編號:</strong> ${escapeHTML(item.poNumber)}</p>
-                                <p><strong>入庫日期:</strong> ${item.stockDate}</p>
-                            </div>
-                            ${remarksHtml}
-                        </div>
-                        <div class="bg-slate-50 p-4 flex justify-end space-x-2">
-                            <button data-id="${item.id}" data-name="${escapeHTML(item.name)}" class="qr-btn bg-gray-600 text-white text-sm font-medium py-2 px-3 rounded-lg hover:bg-gray-700 transition-colors btn-primary" title="產生快速出庫 QR Code">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 5h1m-6.464 6.464l.707.707m-4.242 0l-.707.707M4 12H3m1-6l.707-.707m0 4.242l.707.707m0 4.243l-.707.707M12 20v-1m6-5h-1m-6.464-6.464l.707-.707M7.757 7.757l-.707-.707m0 4.242l-.707.707m0 4.243l.707.707" /></svg>
-                            </button>
-                            <button data-id="${item.id}" class="outbound-btn bg-blue-500 text-white text-sm font-medium py-2 px-3 rounded-lg hover:bg-blue-600 transition-colors btn-primary">
-                                出庫
-                            </button>
-                            <button data-id="${item.id}" class="edit-btn bg-blue-500 text-white text-sm font-medium py-2 px-3 rounded-lg hover:bg-blue-600 transition-colors btn-primary">
-                                編輯
-                            </button>
-                            <button data-id="${item.id}" class="delete-btn bg-red-500 text-white text-sm font-medium py-2 px-3 rounded-lg hover:bg-red-600 transition-colors btn-primary">
-                                刪除
-                            </button>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
-
-                updateStatistics();
-                bindEventListeners();
-            }
-
-            // 2. 更新頂部統計卡片
-            function updateStatistics() {
-                let totalStock = 0;
-                let lowStockCount = 0;
-
-                inventoryData.forEach(item => {
-                    totalStock += item.stock;
-                    if (item.stock < LOW_STOCK_THRESHOLD) {
-                        lowStockCount++;
-                    }
-                });
-
-                totalStockEl.textContent = totalStock;
-                totalItemsEl.textContent = inventoryData.length;
-                lowStockAlertsEl.textContent = lowStockCount;
-            }
-
-            // 3. 渲染出庫紀錄
-            function renderOutboundLog() {
-                logBody.innerHTML = ''; // 清空
-                
-                const sortedLog = [...outboundLog].sort((a, b) => {
-                    const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
-                    const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
-                    return timeB - timeA; // 倒序
-                });
-
-                sortedLog.forEach(log => {
-                    const row = document.createElement('tr');
-                    let timestampStr = 'N/A';
-                    if (log.timestamp) {
-                        const date = log.timestamp.toDate ? log.timestamp.toDate() : new Date(log.timestamp);
-                        timestampStr = date.toLocaleString('zh-TW');
-                    }
-
-                    row.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">${timestampStr}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-medium">${escapeHTML(log.name)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">${escapeHTML(log.poNumber)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium">-${log.quantity}</td>
-                    `;
-                    logBody.appendChild(row);
-                });
-
-                if (outboundLog.length === 0) {
-                    logBody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-slate-500">目前沒有出庫紀錄。</td></tr>';
-                }
-            }
-
-            // 4. 綁定所有卡片按鈕的事件
-            function bindEventListeners() {
-                document.querySelectorAll('.edit-btn').forEach(btn => {
-                    btn.addEventListener('click', handleEditClick);
-                });
-                document.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', handleDeleteClick);
-                });
-                document.querySelectorAll('.outbound-btn').forEach(btn => {
-                    btn.addEventListener('click', handleOutboundClick);
-                });
-                document.querySelectorAll('.qr-btn').forEach(btn => {
-                    btn.addEventListener('click', handleQrClick);
-                });
-            }
-
-            // --- C.R.U.D. 功能 (Firestore 版本) ---
-
-            // 5. 新增商品 (Create)
-            addForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const button = e.target.querySelector('button[type="submit"]');
-                button.disabled = true;
-                button.textContent = "新增中...";
-
-                const newItem = {
-                    name: document.getElementById('add-name').value,
-                    category: document.getElementById('add-category').value,
-                    stock: parseInt(document.getElementById('add-stock').value, 10),
-                    poNumber: document.getElementById('add-ponumber').value,
-                    stockDate: document.getElementById('add-date').value,
-                    remarks: document.getElementById('add-remarks').value,
-                    createdAt: serverTimestamp(), 
-                };
-
-                try {
-                    await addDoc(inventoryCollectionRef, newItem);
-                    addForm.reset(); 
-                } catch (err) {
-                    console.error("新增商品失敗:", err);
-                    alert("新增失敗: " + err.message); 
-                } finally {
-                    button.disabled = false;
-                    button.textContent = "新增商品";
-                }
-            });
-
-            // 6. 點擊刪除 (Delete)
-            async function handleDeleteClick(e) {
-                const id = e.currentTarget.dataset.id;
-                console.log(`正在刪除 ID: ${id}`);
-                
-                try {
-                    await deleteDoc(doc(db, inventoryCollectionRef.path, id));
-                } catch (err) {
-                    console.error("刪除失敗:", err);
-                    alert("刪除失敗: " + err.message);
-                }
-            }
-
-            // 7. 編輯 (Update)
-            function handleEditClick(e) {
-                const id = e.currentTarget.dataset.id;
-                const item = inventoryData.find(i => i.id === id); 
-                
-                document.getElementById('edit-id').value = item.id;
-                document.getElementById('edit-name').value = item.name;
-                document.getElementById('edit-category').value = item.category;
-                document.getElementById('edit-stock').value = item.stock;
-                document.getElementById('edit-ponumber').value = item.poNumber;
-                document.getElementById('edit-date').value = item.stockDate;
-                document.getElementById('edit-remarks').value = item.remarks;
-
-                editModal.classList.remove('hidden');
-            }
-
-            cancelEditBtn.addEventListener('click', () => {
-                editModal.classList.add('hidden');
-            });
-
-            editForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const id = document.getElementById('edit-id').value;
-                const button = e.target.querySelector('button[type="submit"]');
-                button.disabled = true;
-                button.textContent = "儲存中...";
-
-                const updatedData = {
-                    name: document.getElementById('edit-name').value,
-                    category: document.getElementById('edit-category').value,
-                    stock: parseInt(document.getElementById('edit-stock').value, 10),
-                    poNumber: document.getElementById('edit-ponumber').value,
-                    stockDate: document.getElementById('edit-date').value,
-                    remarks: document.getElementById('edit-remarks').value,
-                };
-
-                try {
-                    await updateDoc(doc(db, inventoryCollectionRef.path, id), updatedData);
-                    editModal.classList.add('hidden');
-                } catch (err) {
-                    console.error("更新失敗:", err);
-                    alert("更新失敗: " + err.message);
-                } finally {
-                    button.disabled = false;
-                    button.textContent = "儲存變更";
-                }
-            });
-
-            // 8. 手動出庫 (Update + Create)
-            function handleOutboundClick(e) {
-                const id = e.currentTarget.dataset.id;
-                const item = inventoryData.find(i => i.id === id);
-
-                document.getElementById('outbound-id').value = item.id;
-                document.getElementById('outbound-name').textContent = item.name;
-                document.getElementById('outbound-current-stock').textContent = item.stock;
-                document.getElementById('outbound-quantity').value = '1'; 
-                document.getElementById('outbound-quantity').max = item.stock;
-                outboundError.classList.add('hidden');
-
-                outboundModal.classList.remove('hidden');
-            }
-            
-            cancelOutboundBtn.addEventListener('click', () => {
-                outboundModal.classList.add('hidden');
-            });
-
-            outboundForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const id = document.getElementById('outbound-id').value;
-                const quantity = parseInt(document.getElementById('outbound-quantity').value, 10);
-                
-                const button = e.target.querySelector('button[type="submit"]');
-                button.disabled = true;
-                button.textContent = "出庫中...";
-                
-                const itemRef = doc(db, inventoryCollectionRef.path, id);
-                const item = inventoryData.find(i => i.id === id); 
-
-                if (quantity > item.stock) {
-                    outboundError.textContent = '出庫數量不能超過目前庫存！';
-                    outboundError.classList.remove('hidden');
-                    button.disabled = false;
-                    button.textContent = "確認出庫";
-                    return;
-                }
-                if (quantity <= 0) {
-                    outboundError.textContent = '出庫數量必須大於 0。';
-                    outboundError.classList.remove('hidden');
-                    button.disabled = false;
-                    button.textContent = "確認出庫";
-                    return;
-                }
-
-                try {
+                 try {
+                    const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), currentlyEditingItemId);
                     await updateDoc(itemRef, {
-                        stock: item.stock - quantity
+                        quantity: newQuantity, // Direct set for edit
+                        lastPurchaseDate: newLastPurchaseDate,
+                        purchaseStatus: newPurchaseStatus,
+                        remarks: newRemarks
                     });
 
-                    const logEntry = {
-                        timestamp: serverTimestamp(),
-                        name: item.name,
-                        poNumber: item.poNumber,
-                        quantity: quantity,
-                    };
-                    await addDoc(outboundLogCollectionRef, logEntry);
-
-                    outboundModal.classList.add('hidden');
-
-                } catch (err) {
-                     console.error("手動出庫失敗:", err);
-                     alert("出庫失敗: " + err.message);
-                } finally {
-                    button.disabled = false;
-                    button.textContent = "確認出庫";
+                    closeModal(DOM.editItemModal);
+                    showToast('庫存項目更新成功');
+                } catch (error) {
+                    console.error("更新庫存失敗:", error);
+                    showToast('更新失敗，請稍後再試', 'error');
                 }
             });
+        }
 
-            // 9. QR Code (邏輯不變)
-            function handleQrClick(e) {
-                const id = e.currentTarget.dataset.id; 
-                const name = e.currentTarget.dataset.name;
+        // --- Unseal History Deletion ---
+        function setupUnsealHistoryListener() {
+            if (!DOM.unsealHistoryList) return; // Add check
+            DOM.unsealHistoryList.addEventListener('click', e => {
+                const deleteBtn = e.target.closest('.delete-history-btn');
+                if (!deleteBtn) return;
 
-                qrCodeContainer.innerHTML = ''; 
-                const url = `${location.origin}${location.pathname}?action=quickOutbound&id=${id}`;
+                const { itemId, historyId } = deleteBtn.dataset;
+                if (!itemId || !historyId) return; // Add check
 
-                qrCodeTitle.textContent = name;
-                
-                try {
-                    const qr = qrcode(0, 'M'); 
-                    qr.addData(url);
-                    qr.make();
-                    
-                    const imgTag = document.createElement('img');
-                    imgTag.src = qr.createDataURL(10, 10); 
-                    imgTag.style.width = '256px';
-                    imgTag.style.height = '256px';
-                    imgTag.style.margin = '0 auto';
-                    imgTag.style.border = '1px solid #e2e8f0';
-                    imgTag.style.borderRadius = '0.5rem';
-                    
-                    qrCodeContainer.appendChild(imgTag);
-                    qrCodeModal.classList.remove('hidden');
-                } catch (err) {
-                    console.error('QR Code 產生失敗:', err);
-                    qrCodeContainer.innerHTML = '<p class="text-red-500 text-center">QR Code 產生失敗。</p>';
-                    qrCodeModal.classList.remove('hidden');
+                const item = allSupplies.find(s => s.id === itemId);
+
+                if (!item) {
+                    console.error("找不到對應的項目來刪除紀錄");
+                    showToast('操作失敗，找不到項目', 'error');
+                    return;
                 }
-            }
 
-            cancelQrCodeBtn.addEventListener('click', () => {
-                qrCodeModal.classList.add('hidden');
-            });
+                // Find the specific history entry
+                const historyEntry = (item.usageHistory || []).find(h => h.id === historyId);
+                if (!historyEntry) {
+                     console.error("找不到對應的歷史紀錄");
+                     showToast('操作失敗，找不到紀錄', 'error');
+                     return;
+                }
 
-            // --- 輔助工具 ---
-            function escapeHTML(str) {
-                if (!str) return '';
-                return str.replace(/[&<>"']/g, function(match) {
-                    return {
-                        '&': '&amp;',
-                        '<': '&lt;',
-                        '>': '&gt;',
-                        '"': '&quot;',
-                        "'": '&#39;'
-                    }[match];
+
+                showConfirmation('確認刪除紀錄', `您確定要刪除這筆 "${item.name}" 的拆封紀錄嗎？庫存將會加回 1。`, async () => {
+                    const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), itemId);
+                    const newUsageHistory = (item.usageHistory || []).filter(h => h.id !== historyId);
+
+                    try {
+                        await updateDoc(itemRef, {
+                            quantity: increment(1),
+                            usageHistory: newUsageHistory,
+                        });
+                        showToast('拆封紀錄已刪除');
+                    } catch(err) {
+                        console.error("刪除拆封紀錄失敗:", err);
+                        showToast('刪除失敗，請稍後再試', 'error');
+                    }
                 });
+            });
+        }
+
+        // --- View Toggler ---
+        function setView(view) {
+            currentView = view;
+            localStorage.setItem(CONSTANTS.VIEW_MODE_KEY, view);
+            if (!DOM.viewToggle) return; // Add check
+            const cardBtn = DOM.viewToggle.querySelector('[data-view="card"]');
+            const tableBtn = DOM.viewToggle.querySelector('[data-view="table"]');
+            if (!cardBtn || !tableBtn) return; // Add checks
+
+            cardBtn.classList.toggle('bg-white', view === 'card');
+            cardBtn.classList.toggle('shadow-sm', view === 'card');
+            cardBtn.classList.toggle('text-indigo-600', view === 'card');
+            cardBtn.classList.toggle('text-slate-500', view !== 'card');
+
+            tableBtn.classList.toggle('bg-white', view === 'table');
+            tableBtn.classList.toggle('shadow-sm', view === 'table');
+            tableBtn.classList.toggle('text-indigo-600', view === 'table');
+            tableBtn.classList.toggle('text-slate-500', view !== 'table');
+        }
+
+        function downloadCSV() {
+            const headers = [
+                "採購編號", "耗材名稱", "品項", "庫存量", "最近入庫日期",
+                "財編狀態", "備註",
+                "入庫紀錄", "拆封紀錄"
+            ];
+
+            const sanitizeField = (field) => {
+                const str = String(field || '').replace(/"/g, '""');
+                return `"${str}"`;
+            };
+
+            const rows = allSupplies.map(item => {
+                const inboundHistory = (item.inboundHistory || [])
+                    .map(h => `${h.date}: ${h.quantity}件`)
+                    .join('; ');
+                // Make sure to extract the date from usageHistory
+                const usageHistory = (item.usageHistory || [])
+                    .map(h => h.unsealedDate)
+                    .join('; ');
+
+                return [
+                    sanitizeField(item.purchaseNumber),
+                    sanitizeField(item.name),
+                    sanitizeField(item.category),
+                    item.quantity,
+                    sanitizeField(item.lastPurchaseDate),
+                    sanitizeField(item.purchaseStatus),
+                    sanitizeField(item.remarks),
+                    sanitizeField(inboundHistory),
+                    sanitizeField(usageHistory)
+                ].join(',');
+            });
+
+            const csvContent = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            const today = getLocalDate(); // Use local date for filename
+            link.setAttribute("download", `庫存報表_${today}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url); // Clean up object URL
+            showToast('報表已開始下載');
+        }
+
+        // --- Firebase Functions ---
+        function getCollectionPath(collectionName) {
+            const appId = getAppId();
+            // Using a public path suitable for shared access on GitHub Pages
+            return `artifacts/${appId}/public/data/${collectionName}`;
+        }
+
+        async function addMappingLog(actionMessage) {
+             if (!db) return; // Ensure DB is initialized
+            try {
+                const logsRef = collection(db, getCollectionPath(CONSTANTS.MAPPING_LOGS_COLLECTION));
+                await addDoc(logsRef, {
+                    timestamp: new Date().toISOString(), // Keep ISO for server-side sorting consistency
+                    action: actionMessage,
+                    user: userId || 'anonymous' // Use the signed-in user ID
+                });
+            } catch (error) {
+                console.error("無法寫入品項日誌:", error);
+                // Don't bother the user with a toast for a log failure
             }
         }
-    })(); // 呼叫 main
-</script>
 
+        async function seedInitialData() {
+             if (!db) return; // Ensure DB is initialized
+             try {
+                const suppliesRef = collection(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION));
+                const q = query(suppliesRef, limit(1));
+                const snapshot = await getDocs(q);
+
+                if (snapshot.empty) {
+                    console.log("資料庫是空的，沒有初始資料可植入。");
+                } else {
+                    console.log("資料庫已有資料，跳過植入步驟。");
+                }
+            } catch(error) {
+                 console.error("檢查或植入初始資料時失敗:", error);
+                 // Maybe show an error to the user if this is critical
+            }
+        }
+
+        // --- Login Function ---
+        function handleLogin() {
+            if (!DOM.loginForm || !DOM.passwordInput || !DOM.loginError || !DOM.loginOverlay || !DOM.appContent) return; // Add checks
+
+            DOM.loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const enteredPassword = DOM.passwordInput.value;
+                if (enteredPassword === CONSTANTS.PASSWORD) {
+                    DOM.loginError.textContent = '';
+                    DOM.loginOverlay.classList.add('hidden'); // Hide login
+                    DOM.appContent.classList.remove('hidden'); // Show app
+                    // Initialize Firebase and the rest of the app AFTER successful login
+                    initializeAppAndLoadData();
+                } else {
+                    DOM.loginError.textContent = '密碼錯誤，請重試。';
+                    DOM.passwordInput.focus();
+                    DOM.passwordInput.select();
+                }
+            });
+        }
+
+        // --- App Initialization Function (Called after login) ---
+        async function initializeAppAndLoadData() {
+            // --- Firebase Setup ---
+            try {
+                /* --- GitHub 發布專用 Firebase 設定 --- */
+                const firebaseConfig = {
+                    apiKey: "AIzaSyD1Mo73znKs93FiyaXVCnKERAaWzSk_WFY", // Replace with your actual API key
+                    authDomain: "epson9000-9bcf2.firebaseapp.com",
+                    projectId: "epson9000-9bcf2",
+                    storageBucket: "epson9000-9bcf2.firebasestorage.app",
+                    messagingSenderId: "681687390935",
+                    appId: "1:681687390935:web:563c063abd00054fc06e92"
+                };
+                /* ------------------------------------ */
+
+                if (!firebaseConfig.apiKey.startsWith("AIza")) {
+                     if(DOM.loadingState) DOM.loadingState.innerHTML = `<p class="text-red-500">錯誤：請在程式碼中填入您的 Firebase 設定碼。</p>`; // Add check
+                    return;
+                }
+
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                await signInAnonymously(auth);
+                userId = auth.currentUser ? auth.currentUser.uid : null; // Add check
+                if (!userId) {
+                    throw new Error("匿名登入失敗，無法取得 User ID。");
+                }
+
+                await seedInitialData(); // Will now just check and likely skip
+
+            } catch (error) {
+                console.error("Firebase 初始化失敗:", error);
+                const loadingEl = DOM.loadingState; // Cache element
+                 if (loadingEl) { // Add check
+                    if (error.code === 'auth/configuration-not-found') {
+                        loadingEl.innerHTML = `<div class="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-lg text-left max-w-2xl mx-auto">... [Firebase 匿名登入設定提示] ...</div>`; // Shortened for brevity
+                        lucide.createIcons();
+                    } else {
+                        loadingEl.innerHTML = `<p class="text-red-500">錯誤：無法連接到資料庫。請確認 Firebase 設定是否正確，並檢查網路連線。</p>`;
+                    }
+                 }
+                return; // Stop execution if there's an error
+            }
+
+            // --- UI and Listeners Setup ---
+            setView(currentView);
+            lucide.createIcons(); // Initial call for static icons
+
+            // Listen for real-time updates for supplies
+            if (db) { // Add check for db initialization
+                const suppliesQuery = collection(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION));
+                onSnapshot(suppliesQuery, (snapshot) => {
+                    allSupplies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderInventory();
+                    renderUnsealHistory();
+                }, (error) => {
+                    console.error("讀取庫存資料時發生錯誤:", error);
+                    showToast('讀取庫存資料失敗，請稍後再試', 'error');
+                    if (DOM.inventoryList) DOM.inventoryList.innerHTML = `<p class="text-red-500 text-center">無法載入庫存資料。</p>`; // Add check
+                });
+
+                initializeAndLoadMappings(); // This now loads Firestore mappings
+                listenToMappingLogs(); // Listen to logs
+            }
+
+            // --- EVENT LISTENERS (Should be safe to setup even if DB fails, check inside handlers) ---
+            if (DOM.viewToggle) DOM.viewToggle.addEventListener('click', (e) => { // Add check
+                const button = e.target.closest('button');
+                if(button && button.dataset.view) { // Check dataset exists
+                    const view = button.dataset.view;
+                    setView(view);
+                    renderInventory();
+                }
+            });
+
+            if (DOM.manageMappingsBtn) DOM.manageMappingsBtn.addEventListener('click', () => openModal(DOM.mappingsModal)); // Add check
+            if (DOM.closeMappingsModalBtn) DOM.closeMappingsModalBtn.addEventListener('click', () => closeModal(DOM.mappingsModal)); // Add check
+            if (DOM.mappingsModal) DOM.mappingsModal.addEventListener('click', (e) => { // Add check
+                if (e.target === DOM.mappingsModal) closeModal(DOM.mappingsModal);
+            });
+
+            if (DOM.closeAddStockModalBtn) DOM.closeAddStockModalBtn.addEventListener('click', () => closeModal(DOM.addStockModal)); // Add check
+            if (DOM.addStockModal) DOM.addStockModal.addEventListener('click', (e) => { if (e.target === DOM.addStockModal) closeModal(DOM.addStockModal); }); // Add check
+
+            if (DOM.closeEditModalBtn) DOM.closeEditModalBtn.addEventListener('click', () => closeModal(DOM.editItemModal)); // Add check
+            if (DOM.editItemModal) DOM.editItemModal.addEventListener('click', (e) => { if (e.target === DOM.editItemModal) closeModal(DOM.editItemModal); }); // Add check
+
+            // Add Category button in Modal
+            if (DOM.addModalCategoryBtn) DOM.addModalCategoryBtn.addEventListener('click', async () => { // Add check
+                const newCategory = prompt('請輸入新的耗材類別(品項)名稱：');
+                if (newCategory && newCategory.trim() !== '') {
+                    const trimmedCategory = newCategory.trim();
+                     if (await saveCustomCategory(trimmedCategory)) { // Check success
+                        // Set the newly added category in the dropdown in the mapping modal
+                        if(DOM.newItemCategorySelect) DOM.newItemCategorySelect.value = trimmedCategory; // Add check
+                        showToast(`類別 "${trimmedCategory}" 已新增`);
+                    }
+                }
+            });
+
+            if (DOM.downloadCsvBtn) DOM.downloadCsvBtn.addEventListener('click', downloadCSV); // Add check
+
+            if (DOM.purchaseNumberInput) DOM.purchaseNumberInput.addEventListener('input', (e) => { // Add check
+                 if (!DOM.purchaseNumberFeedback || !DOM.purchaseNumberResults || !DOM.itemNameInput || !DOM.categoryInput) return; // Add checks
+
+                const searchTerm = e.target.value.trim().toLowerCase();
+                const feedbackEl = DOM.purchaseNumberFeedback;
+                const resultsContainer = DOM.purchaseNumberResults;
+
+                resultsContainer.innerHTML = '';
+                feedbackEl.textContent = '';
+
+                 // Clear derived fields when input changes
+                 DOM.itemNameInput.value = '';
+                 DOM.categoryInput.value = ''; // Clear text input
+
+                if (!searchTerm) {
+                    resultsContainer.classList.add('hidden');
+                    return;
+                }
+
+                const results = Object.entries(purchaseNumberMap).filter(([key, value]) => {
+                    // Make sure value exists and has properties before accessing them
+                    return value && (
+                         key.toLowerCase().includes(searchTerm) ||
+                         (value.name && value.name.toLowerCase().includes(searchTerm)) ||
+                         (value.category && value.category.toLowerCase().includes(searchTerm))
+                    );
+                });
+
+
+                if (results.length > 0) {
+                    results.forEach(([key, value]) => {
+                        const resultEl = document.createElement('div');
+                        resultEl.className = 'p-2 hover:bg-indigo-100 cursor-pointer';
+                        resultEl.innerHTML = `<p class="font-semibold text-slate-800">${value.name || 'N/A'}</p><p class="text-sm text-slate-500">${key}</p>`;
+                        resultEl.dataset.key = key;
+                        resultsContainer.appendChild(resultEl);
+                    });
+                    resultsContainer.classList.remove('hidden');
+                } else {
+                    resultsContainer.classList.add('hidden');
+                    feedbackEl.textContent = '查無編號，請新增';
+                }
+            });
+
+            if (DOM.purchaseNumberResults) DOM.purchaseNumberResults.addEventListener('click', (e) => { // Add check
+                 if (!DOM.purchaseNumberInput || !DOM.itemNameInput || !DOM.categoryInput || !DOM.purchaseNumberFeedback) return; // Add checks
+
+                const resultEl = e.target.closest('[data-key]');
+                if (resultEl && resultEl.dataset.key) { // Check dataset exists
+                    const key = resultEl.dataset.key;
+                    const item = purchaseNumberMap[key];
+
+                    if (item) { // Ensure item exists in the map
+                        DOM.purchaseNumberInput.value = key;
+                        DOM.itemNameInput.value = item.name;
+                        DOM.categoryInput.value = item.category; // Set text input value
+
+                        DOM.purchaseNumberResults.classList.add('hidden');
+                        DOM.purchaseNumberFeedback.textContent = '';
+                    } else {
+                        console.error("Selected item not found in purchaseNumberMap:", key);
+                        showToast('選擇品項時發生錯誤', 'error');
+                    }
+                }
+            });
+
+
+            document.addEventListener('click', (e) => {
+                 // Close search results if click outside
+                 if (DOM.purchaseNumberInput && DOM.purchaseNumberResults && !DOM.purchaseNumberInput.contains(e.target) && !DOM.purchaseNumberResults.contains(e.target)) {
+                    DOM.purchaseNumberResults.classList.add('hidden');
+                }
+            });
+
+            if (DOM.addMappingForm) DOM.addMappingForm.addEventListener('submit', async (e) => { // Add check
+                e.preventDefault();
+                const numInput = document.getElementById('new-purchase-number');
+                const nameInput = document.getElementById('new-item-name');
+                if(!numInput || !nameInput || !DOM.newItemCategorySelect) return; // Add checks
+
+                const number = numInput.value.trim();
+                const name = nameInput.value.trim();
+                const category = DOM.newItemCategorySelect.value;
+                if (!number || !name || !category) {
+                     showToast('請填寫所有欄位', 'error');
+                     return;
+                 }
+
+                const oldData = (editingKey && purchaseNumberMap[editingKey]) ?
+                         ` (原: ${purchaseNumberMap[editingKey].name}, ${purchaseNumberMap[editingKey].category})` : '';
+
+                 try {
+                    if (editingKey && editingKey !== number) {
+                         const oldDocRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), editingKey);
+                         try {
+                             await deleteDoc(oldDocRef);
+                         } catch (err) {
+                             console.warn("Could not delete old mapping doc:", editingKey, err);
+                         }
+                    }
+
+                    const docRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), number);
+                    await setDoc(docRef, { name, category });
+                    window.lastEditedMappingKey = number; // Flag for highlighting
+
+                    if (editingKey) {
+                        await addMappingLog(`編輯品項: ${number} (新: ${name}, ${category})${oldData}`);
+                        cancelEditMode();
+                    } else {
+                        await addMappingLog(`新增品項: ${number} (${name}, ${category})`);
+                        DOM.addMappingForm.reset();
+                    }
+                    showToast('品項儲存成功！');
+
+                } catch (error) {
+                    console.error("儲存品項對照時發生錯誤:", error);
+                    showToast('儲存品項失敗', 'error');
+                }
+            });
+
+
+            if (DOM.mappingsListContainer) DOM.mappingsListContainer.addEventListener('click', (e) => { // Add check
+                const editButton = e.target.closest('.edit-mapping-btn');
+                const deleteButton = e.target.closest('.delete-mapping-btn');
+
+                if (editButton && editButton.dataset.key) { // Check dataset exists
+                    const key = editButton.dataset.key;
+                    startEditMode(key);
+                } else if (deleteButton && deleteButton.dataset.key) { // Check dataset exists
+                    const key = deleteButton.dataset.key;
+                    const item = purchaseNumberMap[key]; // Get item details before deleting
+                    const itemDetails = item ? `(${item.name}, ${item.category})` : '';
+                           showConfirmation(
+                                '確認刪除',
+                                `您確定要刪除品項 "${key}" 嗎？這不會刪除已存在的庫存項目，只會從對照表中移除。`,
+                                async () => {
+                                    try {
+                                        const docRef = doc(db, getCollectionPath(CONSTANTS.MAPPINGS_COLLECTION), key);
+                                        await deleteDoc(docRef);
+                                        await addMappingLog(`刪除品項: ${key} ${itemDetails}`);
+                                        showToast('品項已刪除');
+                                        if (editingKey === key) {
+                                            cancelEditMode();
+                                        }
+                                    } catch (error) {
+                                        console.error("刪除品項對照時發生錯誤:", error);
+                                        showToast('刪除品項失敗', 'error');
+                                    }
+                                }
+                           );
+                }
+            });
+
+            // Setup main form listener
+            setupFormListener();
+            // Setup modal form listeners
+            setupAddStockFormListener();
+            setupEditFormListener();
+            // Setup history deletion listener
+            setupUnsealHistoryListener();
+        }
+
+        async function setupFormListener() {
+            const form = document.getElementById('add-item-form');
+            if(!form) return; // Add check
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                // Add checks for all DOM elements used inside this handler
+                if (!DOM.purchaseNumberInput || !DOM.purchaseNumberFeedback || !DOM.itemNameInput || !DOM.categoryInput) return;
+                const quantityInput = document.getElementById('item-quantity');
+                const remarksInput = document.getElementById('item-remarks');
+                if(!quantityInput || !remarksInput || !DOM.itemPurchaseDate) return;
+
+
+                const purchaseNumber = DOM.purchaseNumberInput.value.trim();
+                if (!purchaseNumber) {
+                    showToast('請先選擇或輸入一個有效的採購編號', 'error');
+                    DOM.purchaseNumberFeedback.textContent = '此欄位為必填項';
+                    return;
+                }
+
+                const name = DOM.itemNameInput.value.trim();
+                 if (!name) {
+                     showToast('無法自動帶入耗材名稱，請確認採購編號是否正確或已在品項管理中建立', 'error');
+                     return;
+                 }
+
+
+                const category = DOM.categoryInput.value.trim(); // Read from text input
+                 if (!category) {
+                     showToast('請輸入耗材類別', 'error');
+                     return;
+                 }
+
+
+                const quantity = parseInt(quantityInput.value, 10);
+                 if (isNaN(quantity) || quantity < 0) {
+                     showToast('請輸入有效的庫存數量 (必須是非負整數)', 'error');
+                     quantityInput.focus(); // Highlight the input field
+                     return;
+                 }
+
+
+                const purchaseDate = DOM.itemPurchaseDate.value;
+                const remarks = remarksInput.value.trim();
+
+                // Find existing item directly from `allSupplies` state which is updated by onSnapshot
+                const existingItem = allSupplies.find(item => item.id === purchaseNumber);
+
+                try {
+                    const finalPurchaseDate = purchaseDate || getLocalDate(); // Use provided date or default to today
+
+                    if (existingItem) {
+                        // Item exists, update it by adding stock
+                        const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), purchaseNumber);
+                        const historyEntry = { date: finalPurchaseDate, quantity, type: 'restock' };
+                        const updatedInboundHistory = [...(existingItem.inboundHistory || []), historyEntry];
+
+                        // Prepare updates, always update remarks field
+                        const updates = {
+                            quantity: increment(quantity), // Use increment
+                            lastPurchaseDate: finalPurchaseDate,
+                            inboundHistory: updatedInboundHistory,
+                            remarks: remarks // Always update remarks, allows clearing it
+                        };
+
+
+                        await updateDoc(itemRef, updates);
+                        showToast(`已為 "${name}" 添加入庫 ${quantity} 件`);
+                    } else {
+                        // New item, create it
+                         const newItem = {
+                             id: purchaseNumber, // Use purchase number as the document ID
+                             purchaseNumber,
+                             name,
+                             category,
+                             quantity,
+                             lastPurchaseDate: finalPurchaseDate,
+                             purchaseStatus: purchaseNumberMap[purchaseNumber]?.purchaseStatus || '', // Try to get status from map if exists, else empty
+                             remarks: remarks,
+                             usageHistory: [], // Initialize as empty array
+                             inboundHistory: [{ date: finalPurchaseDate, quantity, type: 'initial_add' }],
+                         };
+                        const itemRef = doc(db, getCollectionPath(CONSTANTS.SUPPLIES_COLLECTION), purchaseNumber);
+                        await setDoc(itemRef, newItem);
+                        showToast(`"${name}" 已成功新增至庫存`);
+                    }
+
+                    // Reset the form regardless of add/update
+                    form.reset();
+                    // Clear fields derived from lookup
+                     DOM.itemNameInput.value = '';
+                     DOM.categoryInput.value = ''; // Clear text input too
+                     DOM.purchaseNumberFeedback.textContent = '';
+
+
+                } catch (error) {
+                    console.error("儲存庫存項目時發生錯誤:", error);
+                    showToast('儲存失敗，請稍後再試', 'error');
+                }
+            });
+        }
+
+         // --- Initialize Login ---
+         handleLogin();
+         // main() is now called inside handleLogin after success
+
+
+    </script>
 </body>
 </html>
 
